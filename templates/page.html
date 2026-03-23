@@ -1,36 +1,72 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>查阅 - ComelyMD</title>
+  <title>查阅实体库 - ComelyMD</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+  <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <script>hljs.highlightAll();</script>
   
   <style>
-    :root { --font-size: 0.9em; --border-radius: 0.5rem; }
-    body { padding-top: 1.5rem; font-family: system-ui, -apple-system, sans-serif; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--muted-border-color); padding-bottom: 1rem; margin-bottom: 2.5rem; }
-    .page-header a { color: var(--primary); text-decoration: none; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px; }
-    .page-meta { font-size: 0.8em; color: var(--muted-color); display: flex; gap: 1rem; align-items:center;}
-    .page-meta span.id-box { font-family: monospace; background: var(--muted-border-color); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--h1-color);}
-    .markdown-body { font-size: 1.05em; line-height: 1.7; color: var(--color); margin-bottom: 4rem; word-break: break-word; }
-    pre code { border-radius: var(--border-radius); padding: 1.25rem; font-size: 0.9em; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
-    article img { max-width: 100%; border-radius: var(--border-radius); display: block; margin: 1.5rem auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-    .markdown-body blockquote { border-left: 3px solid var(--primary); background: var(--card-background-color); padding: 0.75rem 1.25rem; border-radius: 0 var(--border-radius) var(--border-radius) 0; font-style: italic; color: var(--muted-color); }
-    .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 2rem; margin-bottom: 1rem; }
+    :root { --font-size: 1.05em; --border-radius: 0.5rem; }
+    body { padding-top: 1.5rem; font-family: system-ui, -apple-system, sans-serif; transition: background-color 0.3s, color 0.3s;}
+    
+    .page-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--muted-border-color); padding-bottom: 1rem; margin-bottom: 2rem; }
+    .page-header .brand { color: var(--primary); text-decoration: none; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
+    .page-meta { font-size: 0.9em; color: var(--muted-color); display: flex; gap: 1.25rem; align-items: center;}
+    .page-meta span.id-box { font-family: monospace; background: var(--muted-border-color); padding: 0.2rem 0.6rem; border-radius: 4px; color: var(--color); font-weight: bold;}
+    
+    .markdown-body { font-size: 1.05em; line-height: 1.8; color: var(--color); margin-bottom: 6rem; word-break: break-word; }
+    pre code { border-radius: var(--border-radius); padding: 1.25rem; font-size: 0.95em; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+    article img { max-width: 100%; border-radius: var(--border-radius); display: block; margin: 2rem auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    .markdown-body blockquote { border-left: 4px solid var(--primary); background: var(--card-background-color); padding: 0.75rem 1.5rem; border-radius: 0 var(--border-radius) var(--border-radius) 0; font-style: italic; color: var(--muted-color); }
+    
+    .theme-toggle { cursor: pointer; background: transparent; border: none; font-size: 1.5rem; padding: 0; color: var(--color); outline: none; margin-left: 0.5rem; transition: transform 0.2s;}
+    .theme-toggle:hover { transform: scale(1.1); }
+    
+    /* 悬浮快捷控制中台 (Fab) */
+    .fab-container { position: fixed; right: 2rem; bottom: 2rem; display: flex; flex-direction: column; gap: 0.75rem; z-index: 1000; }
+    .fab-btn { width: 48px; height: 48px; border-radius: 50%; background-color: var(--primary); color: var(--primary-inverse); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; box-shadow: 0 4px 15px rgba(0,0,0,0.25); cursor: pointer; transition: transform 0.2s, background-color 0.2s; padding:0;}
+    .fab-btn:hover { transform: translateY(-4px); filter: brightness(1.15); }
+    
+    #toast { visibility: hidden; min-width: 250px; background-color: var(--color); color: var(--background-color); text-align: center; border-radius: var(--border-radius); padding: 1rem; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.95em; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-weight:bold;}
+    #toast.show { visibility: visible; bottom: 50px; opacity: 1; }
+
+    /* 优雅排版 PDF 免干扰截除与优化输出层支持区 */
+    @media print {
+      body { padding-top: 0; background-color: white;}
+      .page-header, .fab-container, .theme-toggle { display: none !important; }
+      .markdown-body { margin-bottom: 0; color: black; font-size: 12pt;}
+    }
   </style>
 </head>
 <body>
+  <!-- 高保真安全隐藏原舱段 (配合前端沙盒剥离分装提取) -->
+  <textarea id="rawMarkdown" style="display:none;" aria-hidden="true">{{.Raw}}</textarea>
+
+  <script>
+    const themeStylesheet = document.getElementById('hljs-theme');
+    const updateTheme = (theme) => {
+      document.documentElement.setAttribute('data-theme', theme);
+      if(theme === 'dark') {
+        themeStylesheet.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css";
+      } else {
+        themeStylesheet.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css";
+      }
+    };
+    const savedTheme = localStorage.getItem('comely-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    updateTheme(savedTheme);
+  </script>
+
   <main class="container" style="max-width: 800px;">
     <div class="page-header">
-      <a href="/">ComelyMD</a>
+      <a href="/" class="brand">ComelyMD</a>
       <div class="page-meta">
-        <span class="id-box">{{.ID}}</span>
-        <span>{{.CreatedAt.Format "2006/01/02 15:04"}}</span>
+        <span class="id-box">#{{.ID}}</span>
+        <span>{{.CreatedAt.Format "2006/01/02 15:04:05"}}</span>
+        <button class="theme-toggle" id="themeBtn" title="无缝变更显示底盘主题">🌓</button>
       </div>
     </div>
     
@@ -38,5 +74,67 @@
       {{.HTML}}
     </article>
   </main>
+  
+  <div class="fab-container">
+    <button class="fab-btn" onclick="copyRaw()" title="无保留原码一键采集全区入库">📋</button>
+    <button class="fab-btn" onclick="downloadMd()" title="转录封卷至本机源文件后缀 (.md)">💾</button>
+    <button class="fab-btn" onclick="exportPdf()" title="跨端调度截像打印提取为无损 PDF">🖨️</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    hljs.highlightAll();
+
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      updateTheme(targetTheme);
+      localStorage.setItem('comely-theme', targetTheme);
+    });
+
+    const rawMd = document.getElementById('rawMarkdown').value;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = "show";
+      setTimeout(() => { t.className = t.className.replace("show", ""); }, 2500);
+    }
+
+    async function copyRaw() {
+      try {
+        await navigator.clipboard.writeText(rawMd);
+        showToast('✅ 系统源全量纯享版基质流代码已被推至剪切大库缓冲。');
+      } catch(err) {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = rawMd;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('✅ 无保护提取捕获至剪区核心位');
+      }
+    }
+
+    function downloadMd() {
+      const blob = new Blob([rawMd], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `comelyMD_record_{{.ID}}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✅ 密闭沙盒内转化源实体对象已交付下载拦截通道。');
+    }
+
+    function exportPdf() {
+      window.print();
+    }
+  </script>
 </body>
 </html>

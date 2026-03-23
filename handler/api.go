@@ -149,6 +149,7 @@ func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 			"ID":        pageData.ID,
 			"CreatedAt": pageData.CreatedAt,
 			"HTML":      template.HTML(pageData.HTML),
+			"Raw":       pageData.Markdown,
 		})
 	} else {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
