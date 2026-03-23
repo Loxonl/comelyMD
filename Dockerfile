@@ -3,8 +3,8 @@ FROM golang:1.21-alpine AS builder
 WORKDIR /app
 
 # 【全量大编译隔离层】只复制配置以执行拉取解压锁定机制
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod ./
+RUN go mod tidy && go mod download
 
 # 这里放之后频繁变动的业务源码，因为上个缓存层未变，即使小规模二次封装重建也快如闪电
 COPY . .
