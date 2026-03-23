@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mdshare:
+    build: .
+    container_name: mdshare
+    restart: always
+    ports:
+      - "18080:18080"
+    volumes:
+      # 持久化防止容器重启导致所有分享数据蒸发
+      - ./data:/app/data
+    environment:
+      - PORT=18080
+      - DB_PATH=/app/data/app.db

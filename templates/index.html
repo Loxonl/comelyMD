@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Markdown 分享便签</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    body { padding-top: 2rem; }
+    textarea { height: 50vh; font-family: monospace; resize: vertical; margin-bottom: 1.5rem; }
+    #result { display: none; margin-top: 2rem; }
+    .title-h { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <hgroup class="title-h">
+      <h2>临时代码与文档分享</h2>
+      <h3>粘贴 Markdown，即刻生成安全过滤专属托管长链接</h3>
+    </hgroup>
+    
+    <form id="mdForm">
+      <textarea name="markdown" id="markdown" placeholder="粘贴你的 Markdown 内容或者任意文本到此执行自动解析转码..." required></textarea>
+      <button type="submit" id="submitBtn" aria-busy="false">生成独立快照链接</button>
+    </form>
+    
+    <div id="result">
+      <article>
+        <header>分享生成成功！请妥善保存（后台不对外暴露列表查阅）。</header>
+        <div class="grid">
+          <input type="text" id="shareUrl" readonly />
+          <button id="copyBtn" class="secondary" onclick="copyUrl()">点击复制至剪切板</button>
+        </div>
+        <p><a href="#" id="viewLink" target="_blank" role="button">立刻新标签页打开效果</a></p>
+      </article>
+      <button style="margin-top: 2rem;" class="outline" onclick="location.reload()">再新建一份分享</button>
+    </div>
+  </main>
+  
+  <script>
+    const form = document.getElementById('mdForm');
+    const resultDiv = document.getElementById('result');
+    const shareUrl = document.getElementById('shareUrl');
+    const viewLink = document.getElementById('viewLink');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.setAttribute('aria-busy', 'true');
+      submitBtn.textContent = '数据编码压缩中...';
+
+      const formData = new FormData(form);
+      try {
+        const response = await fetch('/api/pages', { method: 'POST', body: formData });
+        if (!response.ok) {
+          alert('云端返回抛出接收受阻报错，内容包含敏感拦截或者格式不匹配！');
+        } else {
+          const data = await response.json();
+          form.style.display = 'none';
+          resultDiv.style.display = 'block';
+          shareUrl.value = data.url;
+          viewLink.href = data.url;
+        }
+      } catch (error) {
+        alert('无法发出此包数据通讯，本地网络或者端口未提供开放允许。');
+      } finally {
+        submitBtn.setAttribute('aria-busy', 'false');
+        submitBtn.textContent = '生成独立外链';
+      }
+    });
+
+    function copyUrl() {
+      shareUrl.select();
+      document.execCommand('copy');
+      const copyBtn = document.getElementById('copyBtn');
+      copyBtn.textContent = '内容已捕获！';
+      setTimeout(() => copyBtn.textContent = '点击复制至剪贴板', 3000);
+    }
+  </script>
+</body>
+</html>

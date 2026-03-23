@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>分享文件查询</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  
+  <!-- highlight.js 安全隔离代码块标记赋予表现层 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  
+  <style>
+    body { padding-top: 1.5rem; }
+    .page-meta { font-size: 0.8em; color: var(--muted-color); text-align: right; margin-bottom: 2rem;}
+    article img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 1rem auto; }
+    pre code { border-radius: var(--border-radius); padding: 1.5rem; overflow-x: auto; background-color: #0d1117;} /* Github dark bg compatibility */
+    .markdown-body { margin-bottom: 3rem; word-break: break-word; line-height: 1.6; }
+    .markdown-body blockquote { border-left: 4px solid var(--primary-focus); padding-left: 1rem; color: var(--muted-color); }
+    .toolbar-top { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <nav class="toolbar-top">
+      <ul>
+        <li><a href="/" class="outline" role="button">撰写新备忘</a></li>
+      </ul>
+      <ul>
+        <li><small>便签 ID: {{.ID}}</small></li>
+      </ul>
+    </nav>
+    <div class="page-meta">记录生成于: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</div>
+    
+    <article class="markdown-body">
+      {{.HTML}}
+    </article>
+  </main>
+</body>
+</html>
