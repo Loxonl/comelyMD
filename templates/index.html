@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
     body { padding-top: 2rem; }
-    textarea { height: 50vh; font-family: monospace; resize: vertical; margin-bottom: 1.5rem; }
+    textarea { height: 40vh; font-family: monospace; resize: vertical; margin-bottom: 1.5rem; }
     #result { display: none; margin-top: 2rem; }
     .title-h { margin-bottom: 2rem; }
   </style>
@@ -15,31 +15,61 @@
 <body>
   <main class="container">
     <hgroup class="title-h">
-      <h2>临时代码与文档分享</h2>
-      <h3>粘贴 Markdown，即刻生成安全过滤专属托管长链接</h3>
+      <h2>临时代码与文档分享系统 (高阶配置特装版)</h2>
+      <h3>粘贴 Markdown，即刻生成安全过滤搭载即焚特性的专属长链接机制</h3>
     </hgroup>
     
     <form id="mdForm">
       <textarea name="markdown" id="markdown" placeholder="粘贴你的 Markdown 内容或者任意文本到此执行自动解析转码..." required></textarea>
-      <button type="submit" id="submitBtn" aria-busy="false">生成独立快照链接</button>
+      
+      <!-- 安全层参数设定 -->
+      <details id="advConfig" style="margin-bottom: 2rem;">
+        <summary role="button" class="secondary outline">安全保障环境高阶设定 (无需开启可保持默认状态)</summary>
+        <fieldset style="padding: 1rem; border: 1px solid var(--muted-border-color); border-radius: 6px;">
+          <label for="isBurn">
+            <input type="checkbox" id="isBurn" name="is_burn" value="true">
+            🔥 <strong>阅后即焚能力</strong> (保证独立内容在其生成下放的生命周期单次访问被查收后云端立即执行粉碎，即便拥有原专属链接)
+          </label>
+          <label for="withPassword" style="margin-top: 1rem;">
+            <input type="checkbox" id="withPassword" name="with_password" value="true">
+            🔒 <strong>增加密码访问制锁定保护</strong> (勾选以使得后台系统强加入专属四字随机字母查询锁扣门限认证核验)
+          </label>
+          <label for="expireTime" style="margin-top: 1.5rem;">
+            设定自动资源过期回收时间线 (触碰到期边界系统会完全释放其内存占用并抹杀清理查访呈现依据)
+            <select id="expireTime" name="expire_time" style="margin-top: 10px;">
+              <option value="0" selected>永远不自动消除托管保持长期留底</option>
+              <option value="5m">短期测试存续：5分钟之后抹除</option>
+              <option value="1h">限时传递交替：1个钟头回收清查</option>
+              <option value="6h">短效资源驻留：小半天时间便消除</option>
+              <option value="24h">中位时间存盘：24个跨时钟抹去</option>
+              <option value="7d">中期有效追回：只保持拥有 7天展示力</option>
+              <option value="30d">长期限时储存：1整月周期长达结束清掉</option>
+            </select>
+          </label>
+        </fieldset>
+      </details>
+      
+      <button type="submit" id="submitBtn" aria-busy="false">生成受限隔离独立分享快照</button>
     </form>
     
     <div id="result">
+      <!-- 密码保护提示将会在此注入生成显示 -->
       <article>
-        <header>分享生成成功！请妥善保存（后台不对外暴露列表查阅）。</header>
+        <header>分享生成并配置落建成功！</header>
         <div class="grid">
           <input type="text" id="shareUrl" readonly />
           <button id="copyBtn" class="secondary" onclick="copyUrl()">点击复制至剪切板</button>
         </div>
-        <p><a href="#" id="viewLink" target="_blank" role="button">立刻新标签页打开效果</a></p>
+        <p><a href="#" id="viewLink" target="_blank" role="button">立刻进入沙盒环境查验安全效果</a></p>
       </article>
-      <button style="margin-top: 2rem;" class="outline" onclick="location.reload()">再新建一份分享</button>
+      <button style="margin-top: 2rem;" class="outline" onclick="location.reload()">再新建一份分享环境</button>
     </div>
   </main>
   
   <script>
     const form = document.getElementById('mdForm');
     const resultDiv = document.getElementById('result');
+    const advConfig = document.getElementById('advConfig');
     const shareUrl = document.getElementById('shareUrl');
     const viewLink = document.getElementById('viewLink');
     const submitBtn = document.getElementById('submitBtn');
@@ -47,7 +77,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.setAttribute('aria-busy', 'true');
-      submitBtn.textContent = '数据编码压缩中...';
+      submitBtn.textContent = '密文编织封装上传处理中...';
 
       const formData = new FormData(form);
       try {
@@ -57,15 +87,22 @@
         } else {
           const data = await response.json();
           form.style.display = 'none';
+          advConfig.style.display = 'none';
           resultDiv.style.display = 'block';
           shareUrl.value = data.url;
           viewLink.href = data.url;
+          
+          if (data.pwd) {
+            const pwdInfo = document.createElement("p");
+            pwdInfo.innerHTML = `<mark style="padding: 1rem; border-radius: 4px; display: block; font-size: 1.1em; margin-bottom: 2rem;">安全特权已被打开运行，当前对应受访页拦截校验唯一进场暗语密匙：<strong style="color:var(--primary); font-size:1.3em; margin: 0 5px;">${data.pwd}</strong> <br><small>系统警告：此四位组合授权指令一经当页消散随即便永久隐去并无溯回法子！你交付出该专属链接时请一同将门票一并输出予对方进行验证访问！</small></mark>`;
+            resultDiv.insertBefore(pwdInfo, document.querySelector("#result article"));
+          }
         }
       } catch (error) {
         alert('无法发出此包数据通讯，本地网络或者端口未提供开放允许。');
       } finally {
         submitBtn.setAttribute('aria-busy', 'false');
-        submitBtn.textContent = '生成独立外链';
+        submitBtn.textContent = '生成受限隔离独立分享快照';
       }
     });
 
@@ -73,8 +110,8 @@
       shareUrl.select();
       document.execCommand('copy');
       const copyBtn = document.getElementById('copyBtn');
-      copyBtn.textContent = '内容已捕获！';
-      setTimeout(() => copyBtn.textContent = '点击复制至剪贴板', 3000);
+      copyBtn.textContent = '外链地址内容获取收件成功！';
+      setTimeout(() => copyBtn.textContent = '点击继续进行重抄板获取', 3000);
     }
   </script>
 </body>

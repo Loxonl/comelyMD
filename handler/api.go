@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"mdshare/render"
 	"mdshare/storage"
@@ -19,12 +20,10 @@ func init() {
 	var err error
 	tmpl, err = template.ParseGlob("templates/*.html")
 	if err != nil {
-		// 在初始阶段或者用户删除模板时仅提示警告，避免导致服务奔溃
 		log.Println("警告：无法全量解析加载模板资源 html，请检查 templates/ 资源状态！", err)
 	}
 }
 
-// IndexHandler 负责给访客和用户直面展现带有提交组件的主页视图。
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
@@ -38,14 +37,13 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// CreatePageHandler 处理通过 Ajax 发送到这里的 markdown 分享正文内容并持久化，最后返回分享码链接特征信息。
 func CreatePageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "仅允许提交表单数据", http.StatusMethodNotAllowed)
 		return
 	}
 
-	r.Body = http.MaxBytesReader(w, r.Body, 5<<20) // 对接收文档强制设置保护最高界限为带富文本容错的 5MB
+	r.Body = http.MaxBytesReader(w, r.Body, 5<<20) 
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		http.Error(w, "系统拒接处理异常请求或由于传输尺寸超出预期", http.StatusBadRequest)
 		return
@@ -57,16 +55,29 @@ func CreatePageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 解开用户下放的高阶控制组件安全指令
+	isBurn := r.FormValue("is_burn") == "true"
+	withPwd := r.FormValue("with_password") == "true"
+	expireStr := r.FormValue("expire_time")
+
+	var expireDuration time.Duration
+	switch expireStr {
+	case "5m": expireDuration = 5 * time.Minute
+	case "1h": expireDuration = time.Hour
+	case "6h": expireDuration = 6 * time.Hour
+	case "24h": expireDuration = 24 * time.Hour
+	case "7d": expireDuration = 7 * 24 * time.Hour
+	case "30d": expireDuration = 30 * 24 * time.Hour
+	}
+
 	safeHTML, err := render.MarkdownToHTML([]byte(mdContent))
 	if err != nil {
-		log.Printf("解析拦截层爆出了意外解析停止失败: %v", err)
 		http.Error(w, "将转换到目标显示语法时产生了内部抛出拦截", http.StatusInternalServerError)
 		return
 	}
 
-	id, err := storage.SavePage(mdContent, safeHTML)
+	id, pwd, err := storage.SavePage(mdContent, safeHTML, isBurn, expireDuration, withPwd)
 	if err != nil {
-		log.Printf("向本地写入分享源和清洗后的呈现块时出现了致命阻碍: %v", err)
 		http.Error(w, "数据库接纳发生问题", http.StatusInternalServerError)
 		return
 	}
@@ -77,7 +88,6 @@ func CreatePageHandler(w http.ResponseWriter, r *http.Request) {
 		schema = "https://"
 	}
 	
-	// 判断是否有前置反代环境(X-Forwarded-Host)，用作兼容真实链接组装
 	host := r.Host
 	if fh := r.Header.Get("X-Forwarded-Host"); fh != "" {
 		host = fh
@@ -87,12 +97,19 @@ func CreatePageHandler(w http.ResponseWriter, r *http.Request) {
 		"id":  id,
 		"url": fmt.Sprintf("%s%s/p/%s", schema, host, id),
 	}
+	if pwd != "" {
+		responseCtx["pwd"] = pwd
+	}
 	
 	json.NewEncoder(w).Encode(responseCtx)
 }
 
-// ViewPageHandler 负责检索通过请求传入路径匹配并渲染之前清洗沉淀的已安全分享文件
 func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
+		http.Error(w, "不允许此操作接连此数据源节点", http.StatusMethodNotAllowed)
+		return
+	}
+	
 	id := path.Base(r.URL.Path)
 	if id == "" || id == "p" {
 		http.NotFound(w, r)
@@ -101,8 +118,33 @@ func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	pageData, err := storage.GetPage(id)
 	if err != nil {
-		http.NotFound(w, r)
+		if tmpl != nil {
+			tmpl.ExecuteTemplate(w, "page.html", map[string]interface{}{"HTML": template.HTML(fmt.Sprintf("<h3 style='text-align:center; margin-top: 3rem;'>💥 访问中断响应拦截：目前无法查找到该资源内容，它可能已被阅读后即焚逻辑抹杀或者因为超期执行了自然生命收割解体回收销毁工作！</h3>"))})
+		}
 		return
+	}
+	
+	// 对于启用了前置安全锁止模块的信息进入鉴权门禁检验
+	if pageData.Password != "" {
+		if r.Method == http.MethodGet {
+			if tmpl != nil {
+				tmpl.ExecuteTemplate(w, "password.html", map[string]interface{}{"ID": id})
+			}
+			return
+		} else if r.Method == http.MethodPost {
+			r.ParseForm()
+			if r.FormValue("pwd") != pageData.Password {
+				if tmpl != nil {
+					tmpl.ExecuteTemplate(w, "password.html", map[string]interface{}{"ID": id, "Error": "拒绝出示内容的通行放权：该专属验证密码口令被推翻拦截判断为了非法猜测输入状态！"})
+				}
+				return
+			}
+		}
+	}
+
+	// 行进到展示逻辑且如果是单次查收安全设置则直接物理毁尸灭迹避免暴露
+	if pageData.IsBurn {
+		storage.DeletePage(id)
 	}
 
 	if tmpl != nil {
@@ -112,7 +154,6 @@ func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 			"HTML":      template.HTML(pageData.HTML),
 		})
 	} else {
-		// 作兜底保护直出保障服务稳定可用（即使样式丢弃）
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte(pageData.HTML))
 	}
