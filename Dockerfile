@@ -2,13 +2,14 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# 【全量大编译隔离层】只复制配置以执行拉取解压锁定机制
-COPY go.mod ./
-RUN go mod tidy && go mod download
-
-# 这里放之后频繁变动的业务源码，因为上个缓存层未变，即使小规模二次封装重建也快如闪电
+# 业务代码与所有依赖一并同步置入
 COPY . .
-# 基于 modernc/sqlite 实现 CGO_ENABLED=0 免交叉编译工具链打包方案
+
+# 因为此前的本地测试未包含 Go 实体配置丢失了真正的物理 go.sum
+# 现在在拿到了全盘源码后，依靠构建机的自带编译系统将计算自动补齐所有缺失！
+RUN go mod tidy
+
+# 全量跨环境解绑静态微缩编译
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o mdshare .
 
 FROM alpine:latest
