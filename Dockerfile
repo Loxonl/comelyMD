@@ -2,6 +2,7 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 COPY . .
+RUN go mod tidy
 # 基于 modernc/sqlite 实现 CGO_ENABLED=0 免交叉编译工具链打包方案
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o mdshare .
 
