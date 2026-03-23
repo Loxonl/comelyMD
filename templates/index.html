@@ -3,41 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ComelyMD - Markdown 高效分发引擎</title>
+  <title>ComelyMD</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
     :root {
       --typography-spacing-vertical: 1rem;
-      --font-size: 1.05em;
+      --font-size: 1.15em;
       --h2-font-size: 1.6rem;
-      --form-element-spacing-vertical: 0.85rem;
+      --form-element-spacing-vertical: 1rem;
       --form-element-spacing-horizontal: 1.25rem;
       --border-radius: 0.5rem;
     }
-    body { padding-top: 3rem; font-family: system-ui, -apple-system, sans-serif; transition: background-color 0.3s, color 0.3s; }
+    body { padding-top: 2rem; font-family: system-ui, -apple-system, sans-serif; transition: background-color 0.3s, color 0.3s; }
     textarea { height: 42vh; font-family: "JetBrains Mono", monospace; resize: vertical; border-radius: var(--border-radius); font-size: 1.05em; line-height: 1.6; margin-bottom: 1.5rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
     
-    .config-area { display: flex; flex-direction: column; gap: 0.85rem; padding: 1.25rem; border: 1px solid var(--muted-border-color); border-radius: var(--border-radius); background: var(--card-background-color); margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
-    .config-area label { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0; font-size: 0.95em;}
-    .config-area .select-wrap { display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem; font-size: 0.95em;}
-    .config-area select { margin: 0; width: auto; font-size: 0.95em; padding: 0.4rem 1rem; }
+    .config-area { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
+    .config-area label { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0; font-size: 0.9em;}
+    .config-area .select-wrap { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; font-size: 0.9em;}
+    .config-area select { margin: 0; width: auto; font-size: 0.9em; padding: 0.3rem 0.6rem; }
     
-    .theme-toggle { position: absolute; top: 1.2rem; right: 1.5rem; cursor: pointer; background: transparent; border: none; font-size: 1.6rem; padding: 0; color: var(--color); outline: none; transition: transform 0.2s; }
+    .theme-toggle { position: fixed; bottom: 2rem; right: 2rem; cursor: pointer; background: var(--card-background-color); border: 1px solid var(--muted-border-color); border-radius: 50%; width: 45px; height: 45px; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; color: var(--color); outline: none; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;}
     .theme-toggle:hover { transform: scale(1.1); }
     
     #result { display: none; margin-top: 1.5rem; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     .result-card { border-radius: var(--border-radius); box-shadow: 0 8px 30px rgba(0,0,0,0.08); border: 1px solid var(--muted-border-color); overflow: hidden; background: var(--background-color); }
-    .result-header { padding: 1.2rem 1.5rem; background: var(--card-sectionning-background-color); border-bottom: 1px solid var(--muted-border-color); font-weight: 600; font-size: 0.95em; text-transform: uppercase; letter-spacing: 1px;}
+    .result-header { padding: 1.2rem 1.5rem; background: var(--card-sectionning-background-color); border-bottom: 1px solid var(--muted-border-color); font-weight: 600; font-size: 0.9em; }
     
-    .pwd-notice { padding: 1.25rem 1.5rem; background-color: var(--primary); color: var(--primary-inverse); display: flex; align-items: center; justify-content: space-between; font-size: 1em; cursor: pointer; transition: opacity 0.2s;}
+    .pwd-notice { padding: 1rem 1.5rem; background-color: var(--primary); color: var(--primary-inverse); display: flex; align-items: center; justify-content: space-between; font-size: 0.95em; cursor: pointer; transition: opacity 0.2s;}
     .pwd-notice:hover { opacity: 0.9; }
-    .pwd-notice strong { font-family: monospace; font-size: 1.4em; background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 4px; letter-spacing: 2px; }
+    .pwd-notice strong { font-family: monospace; font-size: 1.3em; background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 4px; letter-spacing: 2px; }
     
-    .copy-actions { display: flex; gap: 1rem; padding: 0 1.5rem 1.5rem; }
-    .copy-actions button { margin: 0; font-size: 0.95em; font-weight: 600;}
+    .copy-actions { display: flex; gap: 1rem; padding: 0 1.5rem 1.5rem; flex-wrap: wrap;}
+    .copy-actions button { margin: 0; font-size: 0.9em; flex: 1; min-width: 150px;}
     
-    #toast { visibility: hidden; min-width: 280px; background-color: var(--primary); color: #fff; text-align: center; border-radius: var(--border-radius); padding: 1rem; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1em; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-weight: 500;}
+    #toast { visibility: hidden; min-width: 250px; background-color: var(--color); color: var(--background-color); text-align: center; border-radius: var(--border-radius); padding: 0.8rem; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9em; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-weight: 500;}
     #toast.show { visibility: visible; bottom: 50px; opacity: 1; }
   </style>
 </head>
@@ -47,24 +47,24 @@
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
 
-  <button class="theme-toggle" id="themeBtn" title="切换模式">🌓</button>
+  <button class="theme-toggle" id="themeBtn" title="切换深浅模式">🌓</button>
 
   <main class="container" style="max-width: 800px;">
-    <hgroup style="margin-bottom: 2rem;">
+    <hgroup style="margin-bottom: 1.5rem;">
       <h2 style="font-size: var(--h2-font-size); margin-bottom: 0.2rem;">ComelyMD</h2>
-      <p style="color: var(--muted-color); font-size: 1em;">极简 · 安全 · Markdown 环境分发</p>
+      <p style="color: var(--muted-color); font-size: 0.9em;">极简 Markdown 分享板</p>
     </hgroup>
     
     <form id="mdForm">
-      <textarea name="markdown" id="markdown" placeholder="在此输入 Markdown 正本..." required></textarea>
+      <textarea name="markdown" id="markdown" placeholder="粘贴内容..." required></textarea>
       
       <div class="config-area">
-        <label><input type="checkbox" id="isBurn" name="is_burn" value="true"> 启用阅后即焚（强制提取单次阅读后解体）</label>
-        <label><input type="checkbox" id="withPassword" name="with_password" value="true"> 挂载 4位系统自旋随机秘锁加固</label>
+        <label><input type="checkbox" id="isBurn" name="is_burn" value="true"> 阅后即焚</label>
+        <label><input type="checkbox" id="withPassword" name="with_password" value="true"> 随机密码保护</label>
         <div class="select-wrap">
-          <span style="color: var(--muted-color);">资源老化过期丢弃时限:</span>
+          <span style="color: var(--muted-color);">自动过期:</span>
           <select id="expireTime" name="expire_time">
-            <option value="0" selected>长存不过期</option>
+            <option value="0" selected>永不过期</option>
             <option value="5m">5 分钟</option>
             <option value="1h">1 小时</option>
             <option value="6h">6 小时</option>
@@ -75,26 +75,26 @@
         </div>
       </div>
       
-      <button type="submit" id="submitBtn" aria-busy="false" style="border-radius: var(--border-radius); font-weight: bold; letter-spacing: 1px; font-size: 1.05em; padding: 0.8rem;">部署并封装链接集合</button>
+      <button type="submit" id="submitBtn" aria-busy="false" style="border-radius: var(--border-radius); font-size: 1em; padding: 0.8rem;">生成</button>
     </form>
     
     <div id="result">
       <article class="result-card">
-        <div class="result-header">终端部署成功</div>
+        <div class="result-header">部署成功</div>
         <div id="pwdArea"></div>
         <div style="padding: 1.5rem 1.5rem 1rem;">
-          <input type="text" id="shareUrl" readonly style="font-size: 1em; margin: 0; font-family: monospace; border-radius: 4px;" />
+          <input type="text" id="shareUrl" readonly style="font-size: 0.95em; margin: 0; font-family: monospace; border-radius: 4px; box-shadow:none; border: 1px dashed var(--muted-border-color);" />
         </div>
         <div class="copy-actions" id="actionBtns">
-          <button class="secondary" onclick="copyOnlyLink()">仅复制链接提取点</button>
-          <button onclick="copyFull()" id="btnCopyFull" style="display:none;">复制全量安全连线组合 (含密令)</button>
+          <button class="secondary" onclick="copyOnlyLink()">仅复制链接</button>
+          <button onclick="copyFull()" id="btnCopyFull" style="display:none;">复制链接和密码</button>
         </div>
         <div style="padding: 0 1.5rem 1.5rem; text-align: right;">
-          <a href="#" id="viewLink" target="_blank" role="button" class="outline" style="border-radius: 4px; padding: 0.4rem 1.5rem; font-size: 0.9em;">验证测试呈现</a>
+          <a href="#" id="viewLink" target="_blank" role="button" class="outline" style="border-radius: 4px; padding: 0.4rem 1.5rem; font-size: 0.9em;">查看</a>
         </div>
       </article>
       <div style="text-align: center; margin-top: 1.5rem;">
-        <a href="/" style="font-size: 0.95em; color: var(--muted-color); text-decoration: none; border-bottom: 1px dashed var(--muted-border-color);">构建新实体分配口</a>
+        <a href="/" style="font-size: 0.9em; color: var(--muted-color); text-decoration: none; border-bottom: 1px dashed var(--muted-border-color);">新建</a>
       </div>
     </div>
   </main>
@@ -134,39 +134,41 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.setAttribute('aria-busy', 'true');
-      submitBtn.textContent = '机房重定向装配与加密处理...';
+      submitBtn.textContent = '处理中...';
 
       const formData = new FormData(form);
       try {
         const response = await fetch('/api/pages', { method: 'POST', body: formData });
         if (!response.ok) {
           const errMsg = await response.text();
-          showToast('发生拦截告警: ' + errMsg);
+          showToast('发生错误: ' + errMsg);
         } else {
           const data = await response.json();
           form.style.display = 'none';
           document.querySelector('.config-area').style.display = 'none';
           resultDiv.style.display = 'block';
           
-          shareUrl.value = data.url;
-          viewLink.href = data.url;
+          const secureUrl = window.location.origin + "/p/" + data.id;
+
+          shareUrl.value = secureUrl;
+          viewLink.href = secureUrl;
           generatedPwd = data.pwd || "";
           
           if (generatedPwd) {
             btnCopyFull.style.display = 'block';
             pwdArea.innerHTML = `<div class="pwd-notice" onclick="copyPwdOnly()">
-              <div><span>已被密码重装保护，点击独立提取这串密钥：</span> <strong id="valPwd">${generatedPwd}</strong></div>
-              <span style="font-size:1.4rem;">🎯</span>
+              <div><span>密码：</span> <strong id="valPwd">${generatedPwd}</strong> (点击复制)</div>
+              <span style="font-size:1.2rem;">📋</span>
             </div>`;
           } else {
             btnCopyFull.style.display = 'none';
           }
         }
       } catch (error) {
-        showToast('网络交互节点失去联通支撑');
+        showToast('网络请求失败');
       } finally {
         submitBtn.setAttribute('aria-busy', 'false');
-        submitBtn.textContent = '配置分发完成';
+        submitBtn.textContent = '生成';
       }
     });
 
@@ -186,18 +188,18 @@
     }
 
     function copyOnlyLink() {
-      writeClip(shareUrl.value, '✅ 分发链桥地址已提至剪贴板提取栈');
+      writeClip(shareUrl.value, '✅ 链接已复制');
     }
 
     function copyPwdOnly() {
       if(!generatedPwd) return;
-      writeClip(generatedPwd, '✅ 访问核实秘钥已脱机复制');
+      writeClip(generatedPwd, '✅ 密码已复制');
     }
 
     function copyFull() {
       if(!generatedPwd) return;
-      const text = `我搭建了一组私密阅卷区。\n专属解析直引链接: ${shareUrl.value}\n提取通行密码口令: ${generatedPwd}\n\n注意：进入隔离屋前请预先提供此串特权密令解锁门限。`;
-      writeClip(text, '✅ 链接与口令组合报文已全额剥离提取至系统板');
+      const text = `分享链接: ${shareUrl.value}\n访问密码: ${generatedPwd}`;
+      writeClip(text, '✅ 链接与密码已复制');
     }
   </script>
 </body>
