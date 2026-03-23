@@ -1,0 +1,31 @@
+name: Docker Release Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # 开启发布镜像进入自身 GitHub Packages（GHCR） 的系统预准入特权
+      packages: write
+
+    steps:
+      - name: 检出源码并构建目录保护
+        uses: actions/checkout@v4
+
+      - name: 链接登入 GitHub 原生包分发仓管台 (ghcr.io)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 启用双层级加速并构建且发行向云端
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/comelymd:latest

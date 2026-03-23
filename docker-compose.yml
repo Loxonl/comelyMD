@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   mdshare:
-    build: .
+    # 全盘依赖远端高性能 CI 构建后的封装成品，从官方仓库秒速获取源
+    image: ghcr.io/loxonl/comelymd:latest
     container_name: mdshare
     restart: always
     ports:
