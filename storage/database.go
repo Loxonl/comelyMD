@@ -81,33 +81,44 @@ func SavePage(markdown, html string, isBurn bool, expireDuration time.Duration, 
 		return "", "", errors.New("无法成功分配空闲短链接访问 ID 极低可能性的报错暴露")
 	}
 
-	var pwd string
+	var nullPwd sql.NullString
 	if withPassword {
-		pwd, _ = GeneratePassword(4)
+		nullPwd.Valid = true
+		nullPwd.String, _ = GeneratePassword(4)
 	}
 
-	var expiresAt *time.Time
+	var nullExpires sql.NullTime
 	if expireDuration > 0 {
-		t := time.Now().UTC().Add(expireDuration)
-		expiresAt = &t
+		nullExpires.Valid = true
+		nullExpires.Time = time.Now().UTC().Add(expireDuration)
 	}
 
 	_, err := DB.Exec(`INSERT INTO pages (id, markdown, html, is_burn, expires_at, password) VALUES (?, ?, ?, ?, ?, ?)`, 
-		id, markdown, html, isBurn, expiresAt, pwd)
+		id, markdown, html, isBurn, nullExpires, nullPwd)
 		
-	return id, pwd, err
+	return id, nullPwd.String, err
 }
 
 // GetPage 对查询单条记录提供并实施拦截、自动时间验证校验以维护保护措施的安全。
 func GetPage(id string) (*Page, error) {
 	var p Page
+	var rawExpires sql.NullTime
+	var rawPassword sql.NullString
+	
 	err := DB.QueryRow("SELECT id, markdown, html, is_burn, expires_at, password, created_at FROM pages WHERE id = ?", id).
-		Scan(&p.ID, &p.Markdown, &p.HTML, &p.IsBurn, &p.ExpiresAt, &p.Password, &p.CreatedAt)
+		Scan(&p.ID, &p.Markdown, &p.HTML, &p.IsBurn, &rawExpires, &rawPassword, &p.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("寻找失效，系统拒绝呈现未声明查回数据包")
 		}
 		return nil, err
+	}
+	
+	if rawExpires.Valid {
+		p.ExpiresAt = &rawExpires.Time
+	}
+	if rawPassword.Valid {
+		p.Password = rawPassword.String
 	}
 	
 	// 核实动态到期的防守条件

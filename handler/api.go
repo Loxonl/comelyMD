@@ -117,6 +117,7 @@ func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	pageData, err := storage.GetPage(id)
 	if err != nil {
+		log.Printf("[访问受阻或不存在] 请求提取核心数据库解析链接源 %s 失败告警: %v", id, err)
 		if tmpl != nil {
 			tmpl.ExecuteTemplate(w, "page.html", map[string]interface{}{"HTML": template.HTML(fmt.Sprintf("<div style='text-align:center; padding-top: 5rem; color: #888; font-family: sans-serif;'><h1 style='font-size: 4rem; margin-bottom: 0.5rem;'>404</h1><p>内容不存在、已过期或属于阅后即焚。</p></div>"))})
 		}

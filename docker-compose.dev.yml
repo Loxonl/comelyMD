@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mdshare-dev:
+    # 启用强制的当前目录本地化一键全盘编译配置（享受全套自动缓存层机制）
+    build: .
+    container_name: mdshare_dev
+    ports:
+      - "18080:18080"
+    volumes:
+      # 直接将其挂在至你桌面的 data 文件里，方便热检视你的 SQLite 数据流
+      - ./data:/app/data
+    environment:
+      - PORT=18080
+      - DB_PATH=/app/data/app.db
