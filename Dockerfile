@@ -2,12 +2,12 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# 第一层：仅复制依赖声明文件，下载依赖（这层只要 go.mod/go.sum 不变就永远命中缓存）
-COPY go.mod go.sum* ./
-RUN go mod download
-
-# 第二层：复制业务代码（代码改动只重新编译，不重新下载依赖）
+# 业务代码与所有依赖一并同步置入
 COPY . .
+
+# 因为此前的本地测试未包含 Go 实体配置丢失了真正的物理 go.sum
+# 必须拿到了全盘源码后，依靠构建机的自带编译系统将计算自动补齐所有缺失！
+RUN go mod tidy
 
 # 全量跨环境解绑静态微缩编译
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o mdshare .
