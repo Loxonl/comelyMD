@@ -402,19 +402,42 @@
       name: 'Gemini',
       match: () => location.hostname.includes('gemini.google.com'),
       getMessageBlocks: () => {
-        return [...document.querySelectorAll('model-response, .model-response-text, message-content[class*="model"]')];
+        // Gemini 使用 <model-response> 自定义标签包裹每条 AI 回复
+        const blocks = [...document.querySelectorAll('model-response')];
+        if (blocks.length > 0) return blocks;
+        // 兜底：尝试类名选择器
+        return [...document.querySelectorAll('.model-response-text, [class*="model-response"]')];
       },
       getActionBar: (block) => {
-        // Gemini 的操作按钮在 .response-actions 或 actions-container 等区域
-        const actions = block.querySelector('.response-actions, .actions-container, [class*="action"]');
-        if (actions) return actions;
-        // 兜底
-        const btns = block.querySelectorAll('button');
-        if (btns.length > 0) return btns[btns.length - 1].parentElement;
+        // Gemini 按钮组层级：.response-container-footer > div > div[role="toolbar"]
+        // 优先精确匹配 toolbar
+        const toolbar = block.querySelector(
+          'div[role="toolbar"], .response-container-footer div[role="toolbar"]'
+        );
+        if (toolbar) return toolbar;
+        // 次选：footer 容器
+        const footer = block.querySelector(
+          '.response-container-footer, .model-response-footer, [class*="response-footer"]'
+        );
+        if (footer) {
+          // 取 footer 内最深层含 button 的容器
+          const innerBar = footer.querySelector('div:has(> button)');
+          if (innerBar) return innerBar;
+          return footer;
+        }
+        // 兜底：查找 mat-icon-button 类型按钮的父容器
+        const matBtn = block.querySelector('button[class*="icon-button"], button[mat-icon-button]');
+        if (matBtn) return matBtn.parentElement;
+        // 最终兜底
+        const allBtns = block.querySelectorAll('button');
+        if (allBtns.length > 0) return allBtns[allBtns.length - 1].parentElement;
         return null;
       },
       getContentHTML: (block) => {
-        const content = block.querySelector('.markdown-main-panel, .response-content, .message-content');
+        // 内容区通常在 .model-response-text 或 .markdown-main-panel 中
+        const content = block.querySelector(
+          '.model-response-text .markdown-main-panel, .model-response-text, .response-content, .message-content'
+        );
         return content ? content.innerHTML : block.innerHTML;
       },
     },
@@ -441,10 +464,12 @@
     const blocks = adapter.getMessageBlocks();
     blocks.forEach(block => {
       if (block.getAttribute(PROCESSED_ATTR)) return;
-      block.setAttribute(PROCESSED_ATTR, '1');
 
       const actionBar = adapter.getActionBar(block);
+      // 按钮区可能尚在异步加载中（Gemini），不标记为已处理以允许下次重试
       if (!actionBar) return;
+
+      block.setAttribute(PROCESSED_ATTR, '1');
 
       const btn = createShareIcon();
       btn.addEventListener('click', (e) => {
@@ -465,8 +490,12 @@
     injectStyles();
     // 首次扫描
     injectShareButtons();
-    // 持续监听新消息
-    const observer = new MutationObserver(() => injectShareButtons());
+    // 持续监听新消息（节流：最多 500ms 触发一次）
+    let debounceTimer = null;
+    const observer = new MutationObserver(() => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(injectShareButtons, 500);
+    });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 

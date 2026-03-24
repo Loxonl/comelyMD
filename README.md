@@ -22,8 +22,8 @@
 
 ## 🖥️ 页面预览
 
-| 首页 | 阅读页 | 密码页 |
-|------|--------|--------|
+| 首页              | 阅读页                   | 密码页               |
+| ----------------- | ------------------------ | -------------------- |
 | 编辑器 + 配置面板 | Markdown 渲染 + 侧边工具 | 品牌渐变锁图标验证卡 |
 
 ## 🚀 部署
@@ -57,14 +57,15 @@ POST /api/pages
 Content-Type: multipart/form-data
 ```
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `markdown` | ✅ | Markdown 内容 |
-| `is_burn` | — | `"true"` 开启阅后即焚 |
-| `with_password` | — | `"true"` 生成随机密码 |
-| `expire_time` | — | `5m` `1h` `6h` `24h` `7d` `30d` |
+| 参数              | 必填 | 说明                                        |
+| ----------------- | ---- | ------------------------------------------- |
+| `markdown`      | ✅   | Markdown 内容                               |
+| `is_burn`       | —   | `"true"` 开启阅后即焚                     |
+| `with_password` | —   | `"true"` 生成随机密码                     |
+| `expire_time`   | —   | `5m` `1h` `6h` `24h` `7d` `30d` |
 
 **响应示例：**
+
 ```json
 {
   "id": "aBcDeFgH",
@@ -75,15 +76,15 @@ Content-Type: multipart/form-data
 
 ## 🛠️ 技术栈
 
-| 组件 | 技术 |
-|------|------|
-| 后端 | Go 1.21 · net/http |
-| 数据库 | SQLite（modernc.org/sqlite，纯 Go） |
-| Markdown | Goldmark + Bluemonday |
-| 代码高亮 | Highlight.js |
-| 字体 | Inter + JetBrains Mono |
-| 图标 | Font Awesome 6 |
-| 部署 | Docker · GitHub Actions · GHCR |
+| 组件     | 技术                                |
+| -------- | ----------------------------------- |
+| 后端     | Go 1.21 · net/http                 |
+| 数据库   | SQLite（modernc.org/sqlite，纯 Go） |
+| Markdown | Goldmark + Bluemonday               |
+| 代码高亮 | Highlight.js                        |
+| 字体     | Inter + JetBrains Mono              |
+| 图标     | Font Awesome 6                      |
+| 部署     | Docker · GitHub Actions · GHCR    |
 
 ## 📋 Roadmap
 
@@ -91,6 +92,25 @@ Content-Type: multipart/form-data
 - [ ] 多文件/标签页聚合分享
 - [ ] 自定义短链接别名
 - [ ] 访问统计（可选开启）
+
+
+## 🔌 油猴脚本 — AI 对话一键分享
+
+在 ChatGPT / Gemini 等 AI 聊天页面中，将 AI 回复内容一键分享到自建 ComelyMD 服务。
+
+支持阅后即焚、密码保护、过期时间等完整选项。
+
+👉 **安装与使用指南**：[userscript/README.md](./userscript/README.md)
+
+## 🏞️ 预览
+
+![1774335008482](image/README/1774335008482.png)
+
+![1774335343296](image/README/1774335343296.png)
+
+![1774335376789](image/README/1774335376789.png)
+
+![1774335527747](image/README/1774335527747.png)
 
 ## 📄 协议
 
