@@ -102,11 +102,13 @@ func SavePage(markdown, html string, isBurn bool, expireDuration time.Duration, 
 // GetPage 对查询单条记录提供并实施拦截、自动时间验证校验以维护保护措施的安全。
 func GetPage(id string) (*Page, error) {
 	var p Page
-	var rawExpires sql.NullTime
+	var rawExpires sql.NullString
 	var rawPassword sql.NullString
+	var rawCreatedAt sql.NullString
 	
-	err := DB.QueryRow("SELECT id, markdown, html, is_burn, expires_at, password, created_at FROM pages WHERE id = ?", id).
-		Scan(&p.ID, &p.Markdown, &p.HTML, &p.IsBurn, &rawExpires, &rawPassword, &p.CreatedAt)
+	// 核武级数据抗性封装：利用原生 CAST(.. AS TEXT) 抵御一切因为 SQLite 无类型机制与 PureGo 驱动反序列化匹配失败引发的崩盘！
+	err := DB.QueryRow("SELECT id, markdown, html, is_burn, CAST(expires_at AS TEXT), password, CAST(created_at AS TEXT) FROM pages WHERE id = ?", id).
+		Scan(&p.ID, &p.Markdown, &p.HTML, &p.IsBurn, &rawExpires, &rawPassword, &rawCreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("寻找失效，系统拒绝呈现未声明查回数据包")
@@ -114,11 +116,30 @@ func GetPage(id string) (*Page, error) {
 		return nil, err
 	}
 	
-	if rawExpires.Valid {
-		p.ExpiresAt = &rawExpires.Time
-	}
 	if rawPassword.Valid {
 		p.Password = rawPassword.String
+	}
+	
+	// 柔性转换提取出的纯字符串回真实过期刻度
+	if rawExpires.Valid && rawExpires.String != "" {
+		if t, err := time.Parse("2006-01-02 15:04:05", rawExpires.String[:19]); err == nil {
+			p.ExpiresAt = &t
+		} else if t2, err2 := time.Parse(time.RFC3339, rawExpires.String); err2 == nil {
+			p.ExpiresAt = &t2
+		}
+	}
+	
+	// 回收创建时间的固定坐标系
+	if rawCreatedAt.Valid && rawCreatedAt.String != "" {
+		if t, err := time.Parse("2006-01-02 15:04:05", rawCreatedAt.String[:19]); err == nil {
+			p.CreatedAt = t
+		} else if t2, err2 := time.Parse(time.RFC3339, rawCreatedAt.String); err2 == nil {
+			p.CreatedAt = t2
+		} else {
+			p.CreatedAt = time.Now()
+		}
+	} else {
+		p.CreatedAt = time.Now()
 	}
 	
 	// 核实动态到期的防守条件

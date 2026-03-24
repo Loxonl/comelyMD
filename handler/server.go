@@ -15,6 +15,10 @@ func Run(addr string) {
 	mux.HandleFunc("/api/pages", CreatePageHandler)
 	mux.HandleFunc("/p/", ViewPageHandler)
 
+	// 静态品牌资源文件服务
+	fs := http.FileServer(http.Dir("static"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      mux,

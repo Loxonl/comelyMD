@@ -20,7 +20,7 @@ func init() {
 	var err error
 	tmpl, err = template.ParseGlob("templates/*.html")
 	if err != nil {
-		log.Println("警告：无法加载模板资源", err)
+		log.Fatalf("绝命灾难：核心全局视觉底层在主源启动阶段严重垮塌失联，强制剥离关闭以防静默吞除输出！断点诱因: %v", err)
 	}
 }
 
@@ -146,12 +146,16 @@ func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tmpl != nil {
-		tmpl.ExecuteTemplate(w, "page.html", map[string]interface{}{
+		errTmpl := tmpl.ExecuteTemplate(w, "page.html", map[string]interface{}{
 			"ID":        pageData.ID,
 			"CreatedAt": pageData.CreatedAt,
 			"HTML":      template.HTML(pageData.HTML),
 			"Raw":       pageData.Markdown,
 		})
+		if errTmpl != nil {
+			log.Printf("[模板白屏拦截] 服务端装载渲染资源 %s 时崩溃: %v", id, errTmpl)
+			w.Write([]byte(fmt.Sprintf("\n<!-- 服务端页面层组装错误，引擎阻断输出: %v -->", errTmpl)))
+		}
 	} else {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte(pageData.HTML))
