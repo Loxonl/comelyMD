@@ -177,9 +177,16 @@
     #toast.show { visibility: visible; bottom: 50px; opacity: 1; }
 
     @media (max-width: 640px) {
-      main { padding: 2rem 1rem 1.5rem; }
-      .options-panel { flex-direction: column; align-items: flex-start; }
+      main { padding: 1.5rem 1rem; }
+      .container { max-width: 100%; }
+      textarea { height: 35vh; font-size: 0.85rem; }
+      .options-panel { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
       .opt-divider { display: none; }
+      .action-row { flex-direction: column; padding: 0 1.25rem 1.25rem; }
+      .btn-action { min-width: 100%; }
+      .url-row { padding: 1rem 1.25rem; }
+      .result-card .card-head { padding: 0.85rem 1.25rem; }
+      .pwd-bar { padding: 0.75rem 1.25rem; }
     }
   </style>
 </head>

@@ -38,15 +38,34 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreatePageHandler(w http.ResponseWriter, r *http.Request) {
+	// CORS 支持：允许油猴脚本等跨域调用
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "仅支持 POST", http.StatusMethodNotAllowed)
 		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 5<<20) 
-	if err := r.ParseMultipartForm(5 << 20); err != nil {
-		http.Error(w, "请求异常或大小超出 5MB 限制", http.StatusBadRequest)
-		return
+	// 兼容 multipart/form-data 和 application/x-www-form-urlencoded
+	contentType := r.Header.Get("Content-Type")
+	if strings.Contains(contentType, "multipart/form-data") {
+		if err := r.ParseMultipartForm(5 << 20); err != nil {
+			http.Error(w, "请求异常或大小超出 5MB 限制", http.StatusBadRequest)
+			return
+		}
+	} else {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "请求解析失败", http.StatusBadRequest)
+			return
+		}
 	}
 	
 	mdContent := r.FormValue("markdown")
