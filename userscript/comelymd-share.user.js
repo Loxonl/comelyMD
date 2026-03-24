@@ -24,6 +24,21 @@
   const BRAND_GRADIENT = 'linear-gradient(135deg, #3b82f6, #6366f1, #a855f7)';
   const PROCESSED_ATTR = `data-${SCRIPT_ID}`;
 
+  // ─── Trusted Types 策略（Gemini CSP 兼容）───
+  let trustedPolicy = null;
+  try {
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+      trustedPolicy = window.trustedTypes.createPolicy('comelymd', {
+        createHTML: (input) => input,
+      });
+    }
+  } catch (e) {
+    // 策略可能已存在或不支持，忽略
+  }
+  function safeHTML(html) {
+    return trustedPolicy ? trustedPolicy.createHTML(html) : html;
+  }
+
   // ─── Turndown 实例 ───
   const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
 
@@ -172,12 +187,28 @@
     }
   }
 
-  // ─── 分享按钮 SVG ───
+  // ─── 分享按钮（纯 DOM API，兼容 Trusted Types）───
   function createShareIcon() {
     const btn = document.createElement('button');
     btn.className = 'cmd-share-btn';
     btn.title = '分享到 ComelyMD';
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`;
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8');
+    const polyline = document.createElementNS(ns, 'polyline');
+    polyline.setAttribute('points', '16 6 12 2 8 6');
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', '12'); line.setAttribute('y1', '2');
+    line.setAttribute('x2', '12'); line.setAttribute('y2', '15');
+    svg.append(path, polyline, line);
+    btn.appendChild(svg);
     return btn;
   }
 
@@ -193,7 +224,7 @@
 
     const overlay = document.createElement('div');
     overlay.className = 'cmd-overlay';
-    overlay.innerHTML = `
+    overlay.innerHTML = safeHTML(`
       <div class="cmd-panel">
         <div class="cmd-panel-header">
           <span>📤</span> 分享到 ComelyMD
@@ -225,7 +256,7 @@
           <button class="cmd-btn cmd-btn-primary" id="cmd-submit">分享</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(overlay);
 
     // 点击遮罩关闭
@@ -285,19 +316,19 @@
     const body = overlay.querySelector('#cmd-body');
     const footer = overlay.querySelector('.cmd-panel-footer');
 
-    body.innerHTML = `
+    body.innerHTML = safeHTML(`
       <div class="cmd-result">
         <div class="icon">✅</div>
         <div style="font-weight:600; margin-bottom:0.5rem;">分享成功</div>
         <input type="text" class="cmd-result-url" value="${url}" readonly onclick="this.select()">
         ${pwd ? `<div style="font-size:12px; color:#8b8fa3; margin-top:0.5rem;">密码</div><div class="cmd-result-pwd">${pwd}</div>` : ''}
       </div>
-    `;
+    `);
 
-    footer.innerHTML = `
+    footer.innerHTML = safeHTML(`
       <button class="cmd-btn cmd-btn-cancel" id="cmd-close">关闭</button>
       <button class="cmd-btn cmd-btn-primary" id="cmd-copy">${pwd ? '复制链接和密码' : '复制链接'}</button>
-    `;
+    `);
 
     footer.querySelector('#cmd-close').addEventListener('click', () => overlay.remove());
     footer.querySelector('#cmd-copy').addEventListener('click', () => {
@@ -315,7 +346,7 @@
     const cfg = getConfig();
     const overlay = document.createElement('div');
     overlay.className = 'cmd-overlay';
-    overlay.innerHTML = `
+    overlay.innerHTML = safeHTML(`
       <div class="cmd-panel">
         <div class="cmd-panel-header"><span>⚙️</span> ComelyMD 配置</div>
         <div class="cmd-panel-body">
@@ -330,7 +361,7 @@
           <button class="cmd-btn cmd-btn-primary" id="cmd-cfg-save">保存</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(overlay);
 
     overlay.querySelector('#cmd-cfg-cancel').addEventListener('click', () => overlay.remove());
