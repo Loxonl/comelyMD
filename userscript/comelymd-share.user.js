@@ -24,19 +24,13 @@
   const BRAND_GRADIENT = 'linear-gradient(135deg, #3b82f6, #6366f1, #a855f7)';
   const PROCESSED_ATTR = `data-${SCRIPT_ID}`;
 
-  // ─── Trusted Types 策略（Gemini CSP 兼容）───
-  let trustedPolicy = null;
-  try {
-    if (window.trustedTypes && window.trustedTypes.createPolicy) {
-      trustedPolicy = window.trustedTypes.createPolicy('comelymd', {
-        createHTML: (input) => input,
-      });
+  // ─── 安全 HTML 注入（DOMParser 方案，完全绕过 Trusted Types CSP）───
+  function setHTML(targetEl, htmlStr) {
+    const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
+    targetEl.textContent = '';
+    while (doc.body.firstChild) {
+      targetEl.appendChild(doc.body.firstChild);
     }
-  } catch (e) {
-    // 策略可能已存在或不支持，忽略
-  }
-  function safeHTML(html) {
-    return trustedPolicy ? trustedPolicy.createHTML(html) : html;
   }
 
   // ─── Turndown 实例 ───
@@ -224,7 +218,7 @@
 
     const overlay = document.createElement('div');
     overlay.className = 'cmd-overlay';
-    overlay.innerHTML = safeHTML(`
+    setHTML(overlay, `
       <div class="cmd-panel">
         <div class="cmd-panel-header">
           <span>📤</span> 分享到 ComelyMD
@@ -316,16 +310,16 @@
     const body = overlay.querySelector('#cmd-body');
     const footer = overlay.querySelector('.cmd-panel-footer');
 
-    body.innerHTML = safeHTML(`
+    setHTML(body, `
       <div class="cmd-result">
         <div class="icon">✅</div>
         <div style="font-weight:600; margin-bottom:0.5rem;">分享成功</div>
-        <input type="text" class="cmd-result-url" value="${url}" readonly onclick="this.select()">
+        <input type="text" class="cmd-result-url" value="${url}" readonly>
         ${pwd ? `<div style="font-size:12px; color:#8b8fa3; margin-top:0.5rem;">密码</div><div class="cmd-result-pwd">${pwd}</div>` : ''}
       </div>
     `);
 
-    footer.innerHTML = safeHTML(`
+    setHTML(footer, `
       <button class="cmd-btn cmd-btn-cancel" id="cmd-close">关闭</button>
       <button class="cmd-btn cmd-btn-primary" id="cmd-copy">${pwd ? '复制链接和密码' : '复制链接'}</button>
     `);
@@ -346,7 +340,7 @@
     const cfg = getConfig();
     const overlay = document.createElement('div');
     overlay.className = 'cmd-overlay';
-    overlay.innerHTML = safeHTML(`
+    setHTML(overlay, `
       <div class="cmd-panel">
         <div class="cmd-panel-header"><span>⚙️</span> ComelyMD 配置</div>
         <div class="cmd-panel-body">
