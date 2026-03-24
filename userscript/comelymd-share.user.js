@@ -402,43 +402,31 @@
       name: 'Gemini',
       match: () => location.hostname.includes('gemini.google.com'),
       getMessageBlocks: () => {
-        // Gemini 使用 <model-response> 自定义标签包裹每条 AI 回复
-        const blocks = [...document.querySelectorAll('model-response')];
-        if (blocks.length > 0) return blocks;
-        // 兜底：尝试类名选择器
-        return [...document.querySelectorAll('.model-response-text, [class*="model-response"]')];
+        // Gemini 使用 <model-response> Angular 自定义标签
+        return [...document.querySelectorAll('model-response')];
       },
       getActionBar: (block) => {
-        // Gemini 按钮组层级：.response-container-footer > div > div[role="toolbar"]
-        // 优先精确匹配 toolbar
-        const toolbar = block.querySelector(
-          'div[role="toolbar"], .response-container-footer div[role="toolbar"]'
-        );
-        if (toolbar) return toolbar;
-        // 次选：footer 容器
-        const footer = block.querySelector(
-          '.response-container-footer, .model-response-footer, [class*="response-footer"]'
-        );
-        if (footer) {
-          // 取 footer 内最深层含 button 的容器
-          const innerBar = footer.querySelector('div:has(> button)');
-          if (innerBar) return innerBar;
-          return footer;
-        }
-        // 兜底：查找 mat-icon-button 类型按钮的父容器
-        const matBtn = block.querySelector('button[class*="icon-button"], button[mat-icon-button]');
-        if (matBtn) return matBtn.parentElement;
-        // 最终兜底
-        const allBtns = block.querySelectorAll('button');
-        if (allBtns.length > 0) return allBtns[allBtns.length - 1].parentElement;
+        // Gemini 的操作按钮是 Angular 的自定义组件标签：
+        // <copy-button>, <thumb-up-button>, <thumb-down-button>, <regenerate-button>
+        // 它们作为兄弟节点排列在同一个父容器中
+        const copyBtn = block.querySelector('copy-button');
+        if (copyBtn && copyBtn.parentElement) return copyBtn.parentElement;
+        // 次选：从 more-menu-button-container 向上找
+        const moreMenu = block.querySelector('.more-menu-button-container');
+        if (moreMenu && moreMenu.parentElement) return moreMenu.parentElement;
+        // 兜底：thumb-up-button 的父容器
+        const thumbUp = block.querySelector('thumb-up-button');
+        if (thumbUp && thumbUp.parentElement) return thumbUp.parentElement;
         return null;
       },
       getContentHTML: (block) => {
-        // 内容区通常在 .model-response-text 或 .markdown-main-panel 中
-        const content = block.querySelector(
-          '.model-response-text .markdown-main-panel, .model-response-text, .response-content, .message-content'
-        );
-        return content ? content.innerHTML : block.innerHTML;
+        // 内容层级: model-response > div > response-container > div.response-container > 内容
+        const content = block.querySelector('.model-response-text, message-content, .response-container .markdown-main-panel');
+        if (content) return content.innerHTML;
+        // 兜底：从 response-container 自定义标签取内容
+        const rc = block.querySelector('response-container');
+        if (rc) return rc.innerHTML;
+        return block.innerHTML;
       },
     },
 
