@@ -1,6 +1,6 @@
 # 🎨 ComelyMD
 
-![Version](https://img.shields.io/badge/version-v1.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-v1.3.0-blue.svg)
 ![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -17,8 +17,11 @@
 - 🌗 **暗/亮主题** — 跟随系统偏好，支持手动切换
 - 📋 **一键操作** — 复制链接、复制链接+密码、点击复制密码
 - 📄 **阅读增强** — 侧边栏快捷：复制内容 / 下载 .md / 导出 PDF
-- 🎨 **现代 UI** — 自定义设计系统，品牌渐变色，无第三方 CSS 框架
-- 🪶 **极致轻量** — 纯 Go 编译（CGO_ENABLED=0），Docker 镜像 < 20MB
+- 📱 **响应式排版** — PC 端沉浸式等宽居中，移动端防溢出滑动保护
+- 📑 **智能导览树** — 桌面级悬浮锚点目录 (TOC)，移动端支持顶层抽屉交互
+- 🧑‍💻 **代码块增强** — 智能编程语言探测标题栏，附带一键入板复制组件
+- 🎨 **现代 UI** — 自定义设计系统，品牌渐变色，无第三方 CSS 框架 
+- 🪶 **极致轻量** — 纯 Go 编译，Docker 构建依托双缓存机制（镜像 < 20MB）
 
 ## 🖥️ 页面预览
 

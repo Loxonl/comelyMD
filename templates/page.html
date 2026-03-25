@@ -39,8 +39,17 @@
       background: var(--bg); color: var(--text);
       font-family: var(--font); font-size: 15px; line-height: 1.6;
       transition: background 0.3s, color 0.3s; -webkit-font-smoothing: antialiased;
+      overflow-x: hidden; /* 防止移动端内容溢出导致的横向滑动 */
     }
-    main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .layout-wrapper {
+      flex: 1; width: 100%; max-width: 1400px; margin: 0 auto;
+      display: flex; justify-content: center; align-items: stretch;
+      gap: 2rem; padding: 2rem 1.5rem; position: relative;
+    }
+    .center-column {
+      flex: 1; max-width: 860px; min-width: 0;
+      display: flex; flex-direction: column;
+    }
     footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.8rem; font-family: var(--mono); }
 
     /* 页头 */
@@ -59,26 +68,46 @@
       padding: 0.15rem 0.45rem; border-radius: 4px; color: var(--text);
     }
 
-    /* 内容+侧边栏布局 */
-    .content-layout { display: flex; gap: 1.25rem; align-items: flex-start; }
+    /* 左侧目录 */
+    .toc-container {
+      position: sticky; top: 2rem; width: 220px; flex-shrink: 0; align-self: flex-start;
+      max-height: calc(100vh - 4rem); overflow-y: auto;
+      font-size: 0.9rem; padding-right: 0.5rem;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .toc-container::-webkit-scrollbar { width: 4px; }
+    .toc-container::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
+    .toc-title { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.8rem; letter-spacing: 0.5px; }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+    .toc-item a {
+      color: var(--text-muted); text-decoration: none; display: block;
+      line-height: 1.4; transition: color 0.2s;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .toc-item a:hover { color: var(--accent); }
+    .toc-h1 { font-weight: 600; margin-top: 0.4rem; }
+    .toc-h2 { padding-left: 0.8rem; }
+    .toc-h3 { padding-left: 1.6rem; font-size: 0.85rem; }
+    .toc-h4 { padding-left: 2.4rem; font-size: 0.8rem; }
 
-    /* 侧边工具栏 */
+    /* 侧边工具栏 (右侧) */
     .sidebar {
-      position: sticky; top: 2rem; display: flex; flex-direction: column; gap: 0.4rem;
-      order: 2; flex-shrink: 0;
+      position: sticky; bottom: 2rem; width: 44px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 0.75rem; align-self: flex-end;
     }
     .tool-btn {
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
       background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
-      font-size: 0.92rem; outline: none; padding: 0;
+      border-radius: 50%; cursor: pointer; transition: all 0.2s;
+      font-size: 1rem; outline: none; padding: 0; box-shadow: var(--shadow-sm);
     }
-    .tool-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .tool-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
     /* Markdown 正文 */
     .markdown-body {
       flex: 1; min-width: 0; order: 1;
-      font-size: 1rem; line-height: 1.8; color: var(--text); word-break: break-word;
+      font-size: 1rem; line-height: 1.8; color: var(--text); 
+      word-break: break-word; overflow-wrap: anywhere;
     }
     .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 { margin: 1.5em 0 0.5em; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
     .markdown-body h1 { font-size: 1.8rem; border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; }
@@ -94,10 +123,21 @@
       background: var(--bg-card); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
       color: var(--text-muted); font-style: italic;
     }
-    .markdown-body pre { margin: 1em 0; border-radius: var(--radius-sm); overflow-x: auto; }
-    .markdown-body pre code { display: block; padding: 1.2rem; font-size: 0.88rem; font-family: var(--mono); line-height: 1.55; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .markdown-body pre { margin: 1.5em 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); background: var(--bg-card); position: relative; }
+    .markdown-body pre code { display: block; padding: 1.2rem; font-size: 0.88rem; font-family: var(--mono); line-height: 1.55; overflow-x: auto; background: transparent; border: none; }
     .markdown-body code { font-family: var(--mono); font-size: 0.88em; background: var(--bg-input); padding: 0.15rem 0.4rem; border-radius: 4px; }
-    .markdown-body pre code { background: transparent; padding: 0; border: none; }
+    .code-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.4rem 0.8rem; background: var(--bg-input); border-bottom: 1px solid var(--border);
+      font-size: 0.75rem; font-family: var(--font); color: var(--text-muted); font-weight: 600; text-transform: uppercase;
+    }
+    .code-lang { letter-spacing: 0.5px; }
+    .code-copy {
+      background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; transition: color 0.2s;
+    }
+    .code-copy:hover { color: var(--text); }
+    .code-copy.copied { color: #10b981; }
     .markdown-body img { max-width: 100%; border-radius: var(--radius-sm); margin: 1.25rem auto; display: block; border: 1px solid var(--border); }
     .markdown-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.92rem; }
     .markdown-body th, .markdown-body td { border: 1px solid var(--border); padding: 0.55rem 0.8rem; text-align: left; }
@@ -125,23 +165,49 @@
 
     @media print {
       body { background: #fff; }
-      .page-header, .sidebar, .theme-toggle, footer { display: none !important; }
+      .page-header, .sidebar, .theme-toggle, footer, .toc-toggle-btn { display: none !important; }
       .markdown-body { color: #000; font-size: 12pt; }
     }
+    
+    @media (min-width: 1025px) {
+      .toc-toggle-btn { display: none !important; }
+    }
+    
+    @media (max-width: 1024px) {
+      .layout-wrapper { gap: 1rem; }
+      .sidebar { position: sticky; bottom: 2rem; align-self: flex-end; }
+      
+      .toc-toggle-btn {
+        position: fixed; top: 1.5rem; right: 1.5rem; width: 42px; height: 42px;
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+        box-shadow: var(--shadow-md); z-index: 1000; font-size: 1.1rem; outline: none;
+      }
+      .toc-toggle-btn:hover { color: var(--text); border-color: var(--accent); transform: translateY(-2px); }
+      
+      .toc-container {
+        position: fixed; top: 5rem; right: 1.5rem; width: 260px; z-index: 999;
+        max-height: 60vh; background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 1.25rem; box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+        transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+        opacity: 0; pointer-events: none;
+      }
+      .toc-container.show {
+        transform: translateX(0); opacity: 1; pointer-events: auto;
+      }
+    }
+    
     @media (max-width: 768px) {
-      main { padding: 1.25rem 1rem; }
+      .layout-wrapper { padding: 1.25rem 1rem; flex-direction: column; }
       .page-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      .content-layout { flex-direction: column; }
       .sidebar {
-        position: static; flex-direction: row; order: 2;
-        justify-content: center; gap: 0.75rem; width: 100%;
-        padding: 1.25rem 0; margin-top: 1rem;
+        position: static; flex-direction: row; align-self: center; width: 100%;
+        justify-content: center; gap: 0.75rem; padding: 1.25rem 0; margin-top: 1rem;
         border-top: 1px solid var(--border);
       }
-      .tool-btn { width: 44px; height: 44px; font-size: 1.1rem; }
-      .markdown-body pre { font-size: 0.82rem; }
-      .markdown-body pre code { padding: 0.9rem; }
-      .markdown-body table { display: block; overflow-x: auto; }
+      .markdown-body pre code { padding: 0.9rem; font-size: 0.82rem; }
+      .markdown-body table { display: block; overflow-x: auto; white-space: nowrap; }
     }
   </style>
 </head>
@@ -161,35 +227,138 @@
 
   <button class="theme-toggle" id="themeBtn" title="切换主题"><i class="fa-solid fa-circle-half-stroke"></i></button>
 
-  <main>
-    <div class="page-header">
-      <a href="/" class="brand">
-        <img src="/static/logo-192.png" alt="ComelyMD">
-        <span>ComelyMD</span>
-      </a>
-      <div class="page-meta">
-        <span class="id-tag">#{{.ID}}</span>
-        <span>{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
-      </div>
-    </div>
+  <div class="layout-wrapper">
+    <!-- 移动端 TOC 开关按钮 -->
+    <button id="toc-toggle" class="toc-toggle-btn" title="显示/隐藏目录"><i class="fa-solid fa-list"></i></button>
 
-    <div class="content-layout">
+    <!-- 左侧目录 -->
+    <aside class="toc-container" id="toc-container" style="display: none;">
+      <div class="toc-title">ON THIS PAGE</div>
+      <ul class="toc-list" id="toc-list"></ul>
+    </aside>
+
+    <!-- 中间主内容区 -->
+    <main class="center-column">
+      <div class="page-header">
+        <a href="/" class="brand">
+          <img src="/static/logo-192.png" alt="ComelyMD">
+          <span>ComelyMD</span>
+        </a>
+        <div class="page-meta">
+          <span class="id-tag">#{{.ID}}</span>
+          <span>{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+        </div>
+      </div>
+
       <article class="markdown-body">
         {{.HTML}}
       </article>
-      <div class="sidebar">
-        <button class="tool-btn" onclick="copyRaw()" title="复制内容"><i class="fa-regular fa-copy"></i></button>
-        <button class="tool-btn" onclick="downloadMd()" title="下载 .md"><i class="fa-solid fa-file-arrow-down"></i></button>
-        <button class="tool-btn" onclick="exportPdf()" title="导出 PDF"><i class="fa-solid fa-file-pdf"></i></button>
-      </div>
-    </div>
-  </main>
+    </main>
 
-  <footer>v1.2.0</footer>
+    <!-- 右侧工具栏 -->
+    <div class="sidebar">
+      <button class="tool-btn" onclick="copyRaw()" title="复制内容"><i class="fa-regular fa-copy"></i></button>
+      <button class="tool-btn" onclick="downloadMd()" title="下载 .md"><i class="fa-solid fa-file-arrow-down"></i></button>
+      <button class="tool-btn" onclick="exportPdf()" title="导出 PDF"><i class="fa-solid fa-file-pdf"></i></button>
+    </div>
+  </div>
+
+  <footer>v1.3.0</footer>
   <div id="toast"></div>
 
   <script>
+    // === 自动生成 TOC 侧边目录 ===
+    function buildTOC() {
+      const tocContainer = document.getElementById('toc-container');
+      const tocList = document.getElementById('toc-list');
+      const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4');
+      if (headings.length === 0) return;
+      
+      tocContainer.style.display = 'block';
+      let html = '';
+      headings.forEach(h => {
+        if (!h.id) h.id = 'heading-' + Math.random().toString(36).substring(2, 9);
+        html += `<li class="toc-item toc-${h.tagName.toLowerCase()}"><a href="#${h.id}">${h.textContent}</a></li>`;
+      });
+      tocList.innerHTML = html;
+
+      // 移动端 TOC 控制逻辑
+      const toggleBtn = document.getElementById('toc-toggle');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          tocContainer.classList.toggle('show');
+        });
+        
+        // 点击页面其他区域折叠目录
+        document.addEventListener('click', (e) => {
+          if (window.innerWidth <= 1024 && !tocContainer.contains(e.target) && !toggleBtn.contains(e.target)) {
+            tocContainer.classList.remove('show');
+          }
+        });
+        
+        // 点击章节链接时自动折叠
+        tocList.addEventListener('click', (e) => {
+          if (e.target.tagName === 'A' && window.innerWidth <= 1024) {
+            tocContainer.classList.remove('show');
+          }
+        });
+      }
+    }
+
+    // === 智能代码块：语言识别与复制按钮 ===
+    function enhanceCodeBlocks() {
+      document.querySelectorAll('.markdown-body pre').forEach(pre => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+        
+        // 提取语言标记
+        let lang = 'Code';
+        code.classList.forEach(cls => {
+          if (cls.startsWith('language-')) lang = cls.replace('language-', '');
+        });
+        if (lang === 'Code' && code.className) {
+           // highlight.js 自动推测的会把类型放在 class 里面而不带 language-
+           const autoLang = Array.from(code.classList).find(c => c !== 'hljs');
+           if (autoLang) lang = autoLang;
+        }
+        
+        const header = document.createElement('div');
+        header.className = 'code-header';
+        
+        const langSpan = document.createElement('div');
+        langSpan.className = 'code-lang';
+        langSpan.textContent = lang;
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'code-copy';
+        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        copyBtn.title = '复制代码';
+        
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(code.innerText);
+            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            copyBtn.classList.add('copied');
+            setTimeout(() => {
+              copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+              copyBtn.classList.remove('copied');
+            }, 2000);
+          } catch (e) {
+            showToast('❌ 复制失败');
+          }
+        });
+        
+        header.appendChild(langSpan);
+        header.appendChild(copyBtn);
+        pre.insertBefore(header, code);
+      });
+    }
+
+    // 页面初始化
     hljs.highlightAll();
+    buildTOC();
+    enhanceCodeBlocks();
     document.getElementById('themeBtn').addEventListener('click', () => {
       const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       applyTheme(t); localStorage.setItem('comely-theme', t);

@@ -2,15 +2,18 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# 业务代码与所有依赖一并同步置入
+# [第一层缓存] 仅引入依赖声明。一旦 go.mod/go.sum 未改变，Docker 将永久缓存这一层的完整容器状态
+COPY go.mod go.sum ./
+# 使用 BuildKit 挂载加速，即便第一层被破坏，也能瞬间从宿主机的隐藏抽屉中读出模块
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# [第二层缓存] 业务代码植入（此层改动频繁，不再会击碎上方依赖层）
 COPY . .
 
-# 因为此前的本地测试未包含 Go 实体配置丢失了真正的物理 go.sum
-# 必须拿到了全盘源码后，依靠构建机的自带编译系统将计算自动补齐所有缺失！
-RUN go mod tidy
-
-# 全量跨环境解绑静态微缩编译
-RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o mdshare .
+# 全量跨环境解绑静态微缩编译，挂载缓存以提速链接环节
+RUN --mount=type=cache,target=/go/pkg/mod \
+    CGO_ENABLED=0 go build -ldflags="-w -s" -o mdshare .
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata
