@@ -2,6 +2,9 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
+# 注入国内镜像劫线代理，阻击 proxy.golang.org 的 TLS EOF 脱网现象
+ENV GOPROXY=https://goproxy.cn,direct
+
 # [第一层缓存] 仅引入依赖声明。一旦 go.mod/go.sum 未改变，Docker 将永久缓存这一层的完整容器状态
 COPY go.mod go.sum ./
 # 使用 BuildKit 挂载加速，即便第一层被破坏，也能瞬间从宿主机的隐藏抽屉中读出模块

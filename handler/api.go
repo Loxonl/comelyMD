@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"mdshare/render"
 	"mdshare/storage"
@@ -122,6 +123,33 @@ func CreatePageHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseCtx)
 }
 
+// 极简提取器：从游离的 Markdown 原始文档中动态榨取 Title 和 Excerpt
+func extractSEO(markdown string) (title, excerpt string) {
+	lines := strings.Split(markdown, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "# ") && title == "" {
+			title = strings.TrimSpace(strings.TrimPrefix(line, "# "))
+		} else if line != "" && !strings.HasPrefix(line, "#") && !strings.HasPrefix(line, ">") && !strings.HasPrefix(line, "!") && !strings.HasPrefix(line, "[") && !strings.HasPrefix(line, "`") && excerpt == "" {
+			excerpt = line
+		}
+		if title != "" && excerpt != "" {
+			break
+		}
+	}
+	if title == "" { title = "ComelyMD Snippet" }
+	// 粗略清理占位标点
+	excerpt = strings.ReplaceAll(excerpt, "*", "")
+	excerpt = strings.ReplaceAll(excerpt, "_", "")
+	excerpt = strings.ReplaceAll(excerpt, "`", "")
+	if utf8.RuneCountInString(excerpt) > 85 {
+		runes := []rune(excerpt)
+		excerpt = string(runes[:85]) + "..."
+	}
+	if excerpt == "" { excerpt = "极简、安全、美观的 Markdown 阅后即焚分享工具" }
+	return title, excerpt
+}
+
 func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		http.Error(w, "不允许的操作方式", http.StatusMethodNotAllowed)
@@ -165,11 +193,14 @@ func ViewPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tmpl != nil {
+		title, excerpt := extractSEO(pageData.Markdown)
 		errTmpl := tmpl.ExecuteTemplate(w, "page.html", map[string]interface{}{
 			"ID":        pageData.ID,
 			"CreatedAt": pageData.CreatedAt,
 			"HTML":      template.HTML(pageData.HTML),
 			"Raw":       pageData.Markdown,
+			"Title":     title,
+			"Excerpt":   excerpt,
 		})
 		if errTmpl != nil {
 			log.Printf("[模板白屏拦截] 服务端装载渲染资源 %s 时崩溃: %v", id, errTmpl)

@@ -10,84 +10,105 @@
   <link rel="apple-touch-icon" href="/static/logo-180.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- 引入 Marked.js, DOMPurify, Highlight.js, KaTeX, Mermaid -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+  <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+  
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --bg-card: #181a24;
-      --bg-input: #1e2030;
-      --text: #e4e5ea;
-      --text-muted: #8b8fa3;
-      --border: #2a2d3a;
-      --border-focus: #6366f1;
-      --accent: #6366f1;
-      --accent-hover: #818cf8;
-      --accent-glow: rgba(99,102,241,0.25);
+      --bg: #0f1117; --bg-card: #181a24; --bg-input: #1e2030; --bg-hover: #232537;
+      --text: #e4e5ea; --text-muted: #8b8fa3;
+      --border: #2a2d3a; --border-focus: #6366f1;
+      --accent: #6366f1; --accent-hover: #818cf8; --accent-glow: rgba(99,102,241,0.25);
       --gradient: linear-gradient(135deg, #3b82f6, #6366f1, #a855f7);
-      --radius: 12px;
-      --radius-sm: 8px;
+      --radius: 12px; --radius-sm: 8px;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,0.35);
-      --toast-bg: #e4e5ea;
-      --toast-text: #0f1117;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3); --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.35); --toast-bg: #e4e5ea; --toast-text: #0f1117;
     }
 
     [data-theme="light"] {
-      --bg: #f8f9fc;
-      --bg-card: #ffffff;
-      --bg-input: #f0f1f5;
-      --text: #1a1c2e;
-      --text-muted: #6b7189;
-      --border: #e2e4ec;
-      --border-focus: #6366f1;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
-      --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
-      --toast-bg: #1a1c2e;
-      --toast-text: #f8f9fc;
+      --bg: #f8f9fc; --bg-card: #ffffff; --bg-input: #f0f1f5; --bg-hover: #e4e6f0;
+      --text: #1a1c2e; --text-muted: #6b7189;
+      --border: #e2e4ec; --border-focus: #6366f1;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.06); --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.1); --toast-bg: #1a1c2e; --toast-text: #f8f9fc;
     }
 
     body {
-      display: flex; flex-direction: column; min-height: 100vh;
-      background: var(--bg); color: var(--text);
-      font-family: var(--font); font-size: 15px; line-height: 1.6;
-      transition: background 0.3s, color 0.3s;
-      -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column; min-height: 100vh; height: 100vh; overflow: hidden;
+      background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.6;
+      transition: background 0.3s, color 0.3s; -webkit-font-smoothing: antialiased;
     }
 
-    main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 3rem 1.5rem 2rem; }
-    footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.8rem; font-family: var(--mono); letter-spacing: 0.5px; }
+    /* 顶部导航 */
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 1.5rem; background: var(--bg-card); border-bottom: 1px solid var(--border);
+      flex-shrink: 0; z-index: 10;
+    }
+    .brand-header { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-header img { width: 32px; height: 32px; border-radius: 8px; }
+    .brand-header .title { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.03em; }
+    .brand-header .subtitle { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-left: 0.5rem; display: none; }
+    
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    .theme-toggle {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid var(--border); border-radius: 50%;
+      color: var(--text-muted); cursor: pointer; transition: all 0.2s; font-size: 0.9rem; outline: none;
+    }
+    .theme-toggle:hover { color: var(--text); border-color: var(--accent); background: var(--bg-input); }
 
-    .container { width: 100%; max-width: 720px; }
+    /* 主体布局 */
+    main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    
+    .editor-container { 
+      flex: 1; display: flex; min-height: 0; width: 100%; max-width: 1600px; margin: 0 auto;
+      background: var(--bg);
+    }
 
-    /* 品牌头部 */
-    .brand-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
-    .brand-header img { width: 40px; height: 40px; border-radius: 10px; }
-    .brand-header .title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em; }
-    .brand-header .subtitle { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; margin-top: 0.1rem; }
-
-    /* 表单区 */
+    .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    
+    /* 左侧编辑区 */
+    .edit-pane { border-right: 1px solid var(--border); }
+    .pane-header {
+      padding: 0.6rem 1.25rem; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid var(--border);
+      background: var(--bg-card); display: flex; justify-content: space-between; align-items: center;
+    }
     textarea {
-      width: 100%; height: 45vh; padding: 1.25rem;
-      background: var(--bg-input); color: var(--text); border: 1px solid var(--border);
-      border-radius: var(--radius); font-family: var(--mono); font-size: 0.9rem; line-height: 1.65;
-      resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      flex: 1; width: 100%; padding: 1.25rem; background: transparent; color: var(--text);
+      border: none; font-family: var(--mono); font-size: 0.9rem; line-height: 1.65;
+      resize: none; outline: none;
     }
-    textarea:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-glow); }
-    textarea::placeholder { color: var(--text-muted); }
+    textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
 
-    /* 配置面板 */
-    .options-panel {
-      display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;
-      padding: 1rem 1.25rem; margin: 1rem 0 1.5rem;
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    /* 右侧预览区 */
+    .preview-pane { background: var(--bg); }
+    .preview-content {
+      flex: 1; overflow-y: auto; padding: 2rem; scroll-behavior: smooth;
     }
-    .opt-item { display: flex; align-items: center; gap: 0.45rem; font-size: 0.88rem; color: var(--text); cursor: pointer; user-select: none; font-weight: 500; white-space: nowrap;}
+
+    /* 底部分享控制台 */
+    .publish-console {
+      flex-shrink: 0; background: var(--bg-card); border-top: 1px solid var(--border);
+      padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    
+    .options-panel {
+      display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; flex: 1;
+    }
+    .opt-item { display: flex; align-items: center; gap: 0.45rem; font-size: 0.88rem; color: var(--text); cursor: pointer; user-select: none; font-weight: 500; white-space: nowrap; }
     .opt-item input[type="checkbox"] {
       appearance: none; -webkit-appearance: none; width: 18px; height: 18px;
       border: 2px solid var(--border); border-radius: 4px; cursor: pointer;
@@ -95,76 +116,93 @@
     }
     .opt-item input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
     .opt-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; top: -1px; left: 2px; font-size: 13px; color: white; font-weight: 700; }
-    .opt-divider { width: 1px; height: 24px; background: var(--border); margin: 0 0.25rem; }
     .opt-select { display: flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 500; }
     .opt-select select {
       background: var(--bg-input); color: var(--text); border: 1px solid var(--border);
-      border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.85rem; font-family: var(--font);
-      outline: none; cursor: pointer;
+      border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.85rem; font-family: var(--font); outline: none; cursor: pointer;
     }
 
-    /* 主按钮 */
     .btn-primary {
-      width: 100%; padding: 0.85rem; border: none; border-radius: var(--radius);
+      padding: 0.75rem 1.5rem; border: none; border-radius: var(--radius-sm);
       background: var(--gradient); color: #fff; font-size: 0.95rem; font-weight: 600;
-      font-family: var(--font); cursor: pointer; transition: all 0.2s;
-      box-shadow: 0 2px 8px var(--accent-glow);
+      font-family: var(--font); cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px var(--accent-glow);
+      white-space: nowrap; flex-shrink: 0;
     }
     .btn-primary:hover { opacity: 0.92; box-shadow: 0 4px 18px var(--accent-glow); transform: translateY(-1px); }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    /* 结果卡片 */
-    #result { display: none; animation: slideUp 0.4s ease; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
-    .result-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md);
+    /* 移动端 Tab 切换 */
+    .mobile-tabs { display: none; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 1rem; }
+    .tab-btn {
+      flex: 1; padding: 0.8rem 0; text-align: center; font-size: 0.95rem; font-weight: 600;
+      color: var(--text-muted); background: transparent; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.2s;
     }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* 结果弹窗 Overlay */
+    .result-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(4px);
+    }
+    .result-overlay.show { opacity: 1; visibility: visible; }
+    .result-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 440px; max-width: 90vw; overflow: hidden; box-shadow: var(--shadow-lg);
+      transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .result-overlay.show .result-card { transform: translateY(0); }
     .result-card .card-head {
-      padding: 1rem 1.5rem; font-weight: 600; font-size: 0.9rem;
+      padding: 1.25rem 1.5rem; font-weight: 600; font-size: 1rem;
       border-bottom: 1px solid var(--border);
       background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(168,85,247,0.08));
+      display: flex; justify-content: space-between; align-items: center;
     }
-    .result-card .card-head i { margin-right: 0.5rem; color: var(--accent); }
-
+    .result-card .card-head .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; }
+    .result-card .card-head .close-btn:hover { color: var(--text); }
     .pwd-bar {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.85rem 1.5rem; cursor: pointer; transition: background 0.2s;
-      background: linear-gradient(135deg, #3b82f6, #6366f1, #a855f7); color: #fff; font-size: 0.9rem;
+      padding: 1rem 1.5rem; cursor: pointer; transition: background 0.2s;
+      background: linear-gradient(135deg, #3b82f6, #6366f1, #a855f7); color: #fff; font-size: 0.95rem;
     }
     .pwd-bar:hover { filter: brightness(1.08); }
-    .pwd-bar code { font-family: var(--mono); font-size: 1.15rem; background: rgba(0,0,0,0.2); padding: 0.15rem 0.6rem; border-radius: 4px; letter-spacing: 3px; }
-
-    .url-row { padding: 1.25rem 1.5rem; }
+    .pwd-bar code { font-family: var(--mono); font-size: 1.25rem; background: rgba(0,0,0,0.2); padding: 0.2rem 0.75rem; border-radius: 4px; letter-spacing: 3px; font-weight: 700; }
+    .url-row { padding: 1.5rem 1.5rem 1rem; }
     .url-row input {
-      width: 100%; padding: 0.7rem 0.9rem; background: var(--bg-input); color: var(--text);
+      width: 100%; padding: 0.8rem 1rem; background: var(--bg-input); color: var(--text);
       border: 1px solid var(--border); border-radius: var(--radius-sm);
-      font-family: var(--mono); font-size: 0.88rem; outline: none;
+      font-family: var(--mono); font-size: 0.9rem; outline: none; text-align: center;
     }
-
-    .action-row { display: flex; gap: 0.75rem; padding: 0 1.5rem 1.25rem; flex-wrap: wrap; }
+    .action-row { display: flex; gap: 0.75rem; padding: 0 1.5rem 1.5rem; flex-wrap: wrap; }
     .btn-action {
-      flex: 1; min-width: 120px; padding: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
-      background: var(--bg-input); color: var(--text); font-size: 0.88rem; font-weight: 500;
-      font-family: var(--font); cursor: pointer; transition: all 0.2s; text-align: center;
+      flex: 1; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg-input); color: var(--text); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none;
     }
-    .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-card); }
     .btn-action.primary { background: var(--gradient); color: #fff; border: none; }
-    .btn-action.primary:hover { opacity: 0.9; }
+    .btn-action.primary:hover { opacity: 0.9; color: #fff; }
 
-    .back-link { display: block; text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.88rem; text-decoration: none; }
-    .back-link:hover { color: var(--accent); }
-
-    /* 主题按钮 */
-    .theme-toggle {
-      position: fixed; bottom: 1.5rem; right: 1.5rem; width: 42px; height: 42px;
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-muted); cursor: pointer; transition: all 0.2s;
-      box-shadow: var(--shadow-md); z-index: 1000; font-size: 1rem; outline: none;
-    }
-    .theme-toggle:hover { color: var(--text); border-color: var(--accent); transform: translateY(-2px); }
+    /* Markdown 预览样式复用 (简化版本) */
+    .markdown-body { font-size: 1rem; line-height: 1.8; color: var(--text); word-break: break-word; overflow-wrap: anywhere; }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 { margin: 1.5em 0 0.5em; font-weight: 700; letter-spacing: -0.02em; }
+    .markdown-body h1 { font-size: 1.8rem; border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; }
+    .markdown-body h2 { font-size: 1.4rem; }
+    .markdown-body h3 { font-size: 1.15rem; }
+    .markdown-body p { margin: 0.75em 0; }
+    .markdown-body a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+    .markdown-body a:hover { border-bottom-color: var(--accent); }
+    .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin: 0.5em 0; }
+    .markdown-body blockquote { border-left: 3px solid var(--accent); padding: 0.6rem 1.2rem; margin: 1em 0; background: var(--bg-card); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; color: var(--text-muted); font-style: italic; }
+    .markdown-body pre { margin: 1.5em 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); background: var(--bg-card); }
+    .markdown-body pre code { display: block; padding: 1.2rem; font-size: 0.88rem; font-family: var(--mono); line-height: 1.55; overflow-x: auto; background: transparent; border: none; }
+    .markdown-body code { font-family: var(--mono); font-size: 0.88em; background: var(--bg-input); padding: 0.15rem 0.4rem; border-radius: 4px; }
+    .markdown-body img { max-width: 100%; border-radius: var(--radius-sm); margin: 1.25rem auto; display: block; border: 1px solid var(--border); }
+    .markdown-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.92rem; display: block; overflow-x: auto; white-space: nowrap; }
+    .markdown-body th, .markdown-body td { border: 1px solid var(--border); padding: 0.55rem 0.8rem; text-align: left; }
+    .markdown-body th { background: var(--bg-card); font-weight: 600; }
+    .markdown-body hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
 
     /* Toast */
     #toast {
@@ -172,49 +210,93 @@
       background: var(--toast-bg); color: var(--toast-text);
       padding: 0.75rem 1.5rem; border-radius: var(--radius-sm);
       font-size: 0.88rem; font-weight: 500; box-shadow: var(--shadow-lg);
-      opacity: 0; transition: opacity 0.3s, bottom 0.3s; z-index: 9999;
+      opacity: 0; transition: opacity 0.3s, bottom 0.3s; z-index: 99999;
     }
     #toast.show { visibility: visible; bottom: 50px; opacity: 1; }
 
-    @media (max-width: 640px) {
-      main { padding: 1.5rem 1rem; }
-      .container { max-width: 100%; }
-      textarea { height: 35vh; font-size: 0.85rem; }
-      .options-panel { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
-      .opt-divider { display: none; }
-      .action-row { flex-direction: column; padding: 0 1.25rem 1.25rem; }
-      .btn-action { min-width: 100%; }
-      .url-row { padding: 1rem 1.25rem; }
-      .result-card .card-head { padding: 0.85rem 1.25rem; }
-      .pwd-bar { padding: 0.75rem 1.25rem; }
+    @media (min-width: 769px) {
+      .brand-header .subtitle { display: inline-block; }
+    }
+    @media (max-width: 768px) {
+      body { height: auto; min-height: 100vh; overflow: visible; }
+      header { padding: 0.75rem 1rem; }
+      .mobile-tabs { display: flex; }
+      .editor-container { flex-direction: column; overflow: visible; }
+      .pane { display: none; min-height: calc(100vh - 180px); }
+      .pane.active { display: flex; }
+      .edit-pane { border-right: none; }
+      .pane-header { display: none; } /* 在移动端使用 Tab 代替 */
+      .publish-console {
+        flex-direction: column; align-items: stretch; padding: 1rem;
+        position: sticky; bottom: 0; z-index: 100;
+      }
+      .options-panel { gap: 0.75rem; justify-content: space-between; }
+      .btn-primary { width: 100%; }
+      .result-card { width: 100%; margin: 1rem; border-radius: 16px; }
+      .action-row { flex-direction: column; gap: 0.5rem; }
     }
   </style>
 </head>
 <body>
   <script>
+    const hljsLink = document.getElementById('hljs-theme');
+    const applyTheme = (t) => {
+      document.documentElement.setAttribute('data-theme', t);
+      if(hljsLink) {
+          hljsLink.href = t === 'dark'
+            ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css'
+            : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css';
+      }
+      if (window.mermaid) {
+        mermaid.initialize({ theme: t === 'dark' ? 'dark' : 'default' });
+      }
+    };
     const saved = localStorage.getItem('comely-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', saved);
+    applyTheme(saved);
   </script>
 
-  <button class="theme-toggle" id="themeBtn" title="切换主题"><i class="fa-solid fa-circle-half-stroke"></i></button>
+  <!-- 顶部导航 -->
+  <header>
+    <div class="brand-header">
+      <img src="/static/logo-192.png" alt="ComelyMD">
+      <div class="title">ComelyMD</div>
+      <div class="subtitle">极简 Markdown 分享</div>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" id="themeBtn" title="切换主题"><i class="fa-solid fa-circle-half-stroke"></i></button>
+    </div>
+  </header>
 
   <main>
-    <div class="container">
-      <div class="brand-header">
-        <img src="/static/logo-192.png" alt="ComelyMD" width="40" height="40">
-        <div>
-          <div class="title">ComelyMD</div>
-          <div class="subtitle">极简 Markdown 分享</div>
+    <form id="mdForm" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+      <!-- 移动端 Tab -->
+      <div class="mobile-tabs">
+        <button type="button" class="tab-btn active" onclick="switchTab('edit')"><i class="fa-solid fa-pen-nib"></i> 编辑</button>
+        <button type="button" class="tab-btn" onclick="switchTab('preview')"><i class="fa-solid fa-eye"></i> 预览</button>
+      </div>
+
+      <!-- 编辑与预览分栏 -->
+      <div class="editor-container">
+        <!-- 左侧编辑 -->
+        <div class="pane edit-pane active" id="pane-edit">
+          <div class="pane-header">Markdown Source</div>
+          <textarea name="markdown" id="markdown" placeholder="在此粘贴或输入 Markdown 内容…" required></textarea>
+        </div>
+        <!-- 右侧预览 -->
+        <div class="pane preview-pane" id="pane-preview">
+          <div class="pane-header">Live Preview</div>
+          <div class="preview-content markdown-body" id="preview-box">
+             <div style="color:var(--text-muted); opacity:0.5; text-align:center; margin-top:4rem;">预览区域...</div>
+          </div>
         </div>
       </div>
 
-      <form id="mdForm">
-        <textarea name="markdown" id="markdown" placeholder="在此粘贴或输入 Markdown 内容…" required></textarea>
+      <!-- 底部控制台 -->
+      <div class="publish-console">
         <div class="options-panel">
           <label class="opt-item"><input type="checkbox" id="isBurn" name="is_burn" value="true"> 阅后即焚</label>
           <label class="opt-item"><input type="checkbox" id="withPassword" name="with_password" value="true"> 密码保护</label>
-          <span class="opt-divider"></span>
-          <div class="opt-select">
+          <div class="opt-select" style="margin-left: auto;">
             <span style="color:var(--text-muted);">过期:</span>
             <select id="expireTime" name="expire_time">
               <option value="0" selected>永不</option>
@@ -227,71 +309,198 @@
             </select>
           </div>
         </div>
-        <button type="submit" class="btn-primary" id="submitBtn">生成分享链接</button>
-      </form>
-
-      <div id="result">
-        <article class="result-card">
-          <div class="card-head"><i class="fa-solid fa-check-circle"></i>分享就绪</div>
-          <div id="pwdArea"></div>
-          <div class="url-row">
-            <input type="text" id="shareUrl" readonly>
-          </div>
-          <div class="action-row" id="actionBtns">
-            <button class="btn-action" onclick="copyOnlyLink()"><i class="fa-regular fa-copy"></i> 复制链接</button>
-            <button class="btn-action" onclick="copyFull()" id="btnCopyFull" style="display:none;"><i class="fa-solid fa-link"></i> 复制链接和密码</button>
-            <a href="#" id="viewLink" target="_blank" class="btn-action primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> 访问</a>
-          </div>
-        </article>
-        <a href="/" class="back-link">← 回到首页</a>
+        <button type="submit" class="btn-primary" id="submitBtn"><i class="fa-solid fa-paper-plane"></i> 生成分享链接</button>
       </div>
-    </div>
+    </form>
   </main>
 
-  <footer>v1.2.0</footer>
+  <!-- 成果弹窗 -->
+  <div class="result-overlay" id="resultOverlay">
+    <div class="result-card">
+      <div class="card-head">
+        <span><i class="fa-solid fa-check-circle" style="color:#10b981; margin-right:0.4rem;"></i> 分享就绪</span>
+        <button type="button" class="close-btn" onclick="closeResult()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="pwdArea"></div>
+      <div class="url-row">
+        <input type="text" id="shareUrl" readonly onclick="this.select()">
+      </div>
+      <div class="action-row" id="actionBtns">
+        <button type="button" class="btn-action" onclick="copyOnlyLink()"><i class="fa-regular fa-copy"></i> 仅链接</button>
+        <button type="button" class="btn-action" onclick="copyFull()" id="btnCopyFull" style="display:none;"><i class="fa-solid fa-link"></i> 链接和密码</button>
+        <a href="#" id="viewLink" target="_blank" class="btn-action primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> 立即访问</a>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script>
+    // === 主题切换 ===
     document.getElementById('themeBtn').addEventListener('click', () => {
       const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', t);
+      applyTheme(t);
       localStorage.setItem('comely-theme', t);
     });
 
+    // === Toast 提示 ===
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg; t.className = 'show';
       setTimeout(() => t.className = '', 2500);
     }
 
+    // === 移动端 Tab 逻辑 ===
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+      if(tab === 'edit') {
+        document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        document.getElementById('pane-edit').classList.add('active');
+      } else {
+        document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+        document.getElementById('pane-preview').classList.add('active');
+      }
+    }
+
+    // === 实时渲染与同步滚动 (Live Preview & Sync Scroll) ===
+    const mdInput = document.getElementById('markdown');
+    const previewBox = document.getElementById('preview-box');
+
+    // 配置 Marked 语法解析
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      highlight: function(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+      }
+    });
+
+    let renderTimeout = null;
+    mdInput.addEventListener('input', () => {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        let raw = mdInput.value;
+        if (!raw.trim()) {
+           previewBox.innerHTML = '<div style="color:var(--text-muted); opacity:0.5; text-align:center; margin-top:4rem;">预览区域...</div>';
+           return;
+        }
+
+        // 1. 保护数学公式块，防止 '_' 及 '*' 被 marked.js 错误格式化
+        const mathBlocks = [];
+        raw = raw.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
+          mathBlocks.push(match);
+          return `COMELYMATHPREVIEW${mathBlocks.length - 1}ENDMATH`;
+        });
+        raw = raw.replace(/\$([^\$\n]+?)\$/g, (match) => {
+          mathBlocks.push(match);
+          return `COMELYMATHPREVIEW${mathBlocks.length - 1}ENDMATH`;
+        });
+
+        // 2. 解析基本语法与代码清理沙盒
+        const dirtyHTML = marked.parse(raw);
+        let cleanHTML = DOMPurify.sanitize(dirtyHTML);
+
+        // 3. 释放数学公式
+        mathBlocks.forEach((block, i) => {
+          const escaped = block.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          cleanHTML = cleanHTML.replace(`COMELYMATHPREVIEW${i}ENDMATH`, escaped);
+        });
+
+        previewBox.innerHTML = cleanHTML;
+
+        // 4. 重绘图形与公式
+        renderMathAndDiagrams();
+      }, 350); // 350ms 防抖
+    });
+
+    // 独立出图表渲染闭包
+    function renderMathAndDiagrams() {
+      // 捕获 Mermaid
+      mermaid.initialize({ startOnLoad: false, theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default' });
+      let mermaidNodes = [];
+      previewBox.querySelectorAll('pre > code.language-mermaid').forEach((block, i) => {
+        const id = 'mermaid-preview-' + i + Math.random().toString(36).substring(2, 6);
+        const pre = block.parentElement;
+        const div = document.createElement('div');
+        div.className = 'mermaid'; div.id = id; div.textContent = block.textContent;
+        pre.parentNode.replaceChild(div, pre);
+        mermaidNodes.push(div);
+      });
+      if (mermaidNodes.length > 0) {
+        try { mermaid.init(undefined, mermaidNodes); } catch (e) {} // 捕获打字未画好图一半的报错
+      }
+
+      // 捕获 公式
+      if (window.renderMathInElement) {
+        renderMathInElement(previewBox, {
+          delimiters: [ {left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false} ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // 滚动同步
+    let isSyncingLeft = false;
+    let isSyncingRight = false;
+    
+    mdInput.addEventListener('scroll', () => {
+      if (!isSyncingLeft) {
+        isSyncingRight = true;
+        const percentage = mdInput.scrollTop / (mdInput.scrollHeight - mdInput.clientHeight);
+        previewBox.scrollTop = percentage * (previewBox.scrollHeight - previewBox.clientHeight);
+      }
+      isSyncingLeft = false;
+    });
+    
+    previewBox.addEventListener('scroll', () => {
+      if (!isSyncingRight) {
+        isSyncingLeft = true;
+        const percentage = previewBox.scrollTop / (previewBox.scrollHeight - previewBox.clientHeight);
+        mdInput.scrollTop = percentage * (mdInput.scrollHeight - mdInput.clientHeight);
+      }
+      isSyncingRight = false;
+    });
+
+    // === 提交逻辑 ===
     const form = document.getElementById('mdForm');
-    const resultDiv = document.getElementById('result');
-    const shareUrl = document.getElementById('shareUrl');
-    const viewLink = document.getElementById('viewLink');
-    const submitBtn = document.getElementById('submitBtn');
+    const overlay = document.getElementById('resultOverlay');
     let generatedPwd = '';
+    
+    function closeResult() { overlay.classList.remove('show'); mdInput.focus(); }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      submitBtn.disabled = true; submitBtn.textContent = '生成中…';
+      const submitBtn = document.getElementById('submitBtn');
+      if(mdInput.value.trim().length === 0) { showToast('内容不能为空'); return; }
+      
+      submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 生成中…';
       try {
         const res = await fetch('/api/pages', { method: 'POST', body: new FormData(form) });
         if (!res.ok) { showToast('提交失败: ' + await res.text()); return; }
         const data = await res.json();
-        form.style.display = 'none';
-        resultDiv.style.display = 'block';
+        
         const url = location.origin + '/p/' + data.id;
-        shareUrl.value = url;
-        viewLink.href = url;
+        document.getElementById('shareUrl').value = url;
+        document.getElementById('viewLink').href = url;
         generatedPwd = data.pwd || '';
+        
         const pwdArea = document.getElementById('pwdArea');
         const btnFull = document.getElementById('btnCopyFull');
         if (generatedPwd) {
           btnFull.style.display = '';
-          pwdArea.innerHTML = `<div class="pwd-bar" onclick="copyPwd()"><div>密码: <code>${generatedPwd}</code> <small>(点击复制)</small></div><i class="fa-regular fa-copy"></i></div>`;
-        } else { btnFull.style.display = 'none'; pwdArea.innerHTML = ''; }
-      } catch { showToast('网络错误'); }
-      finally { submitBtn.disabled = false; submitBtn.textContent = '生成分享链接'; }
+          pwdArea.innerHTML = `<div class="pwd-bar" onclick="copyPwd()"><div><span style="opacity:0.8;">生成密码:</span> <code>${generatedPwd}</code></div><i class="fa-regular fa-copy"></i></div>`;
+        } else { 
+          btnFull.style.display = 'none'; pwdArea.innerHTML = ''; 
+        }
+        
+        overlay.classList.add('show');
+      } catch { showToast('网络错误，请重试'); }
+      finally { 
+        submitBtn.disabled = false; 
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 生成分享链接'; 
+      }
     });
 
     async function clip(text, msg) {
@@ -301,9 +510,9 @@
       }
       showToast(msg);
     }
-    function copyOnlyLink() { clip(shareUrl.value, '✅ 链接已复制'); }
+    function copyOnlyLink() { clip(document.getElementById('shareUrl').value, '✅ 链接已复制'); }
     function copyPwd() { clip(generatedPwd, '✅ 密码已复制'); }
-    function copyFull() { clip(`链接: ${shareUrl.value}\n密码: ${generatedPwd}`, '✅ 已复制链接和密码'); }
+    function copyFull() { clip(`链接: ${document.getElementById('shareUrl').value}\n密码: ${generatedPwd}`, '✅ 链接和密码已复制'); }
   </script>
 </body>
 </html>

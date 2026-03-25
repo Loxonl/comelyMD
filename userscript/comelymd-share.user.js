@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ComelyMD Share — AI 对话分享
 // @namespace    https://github.com/Loxonl/comelyMD
-// @version      1.3.0
+// @version      1.4.0
 // @description  将 ChatGPT / Gemini 的 AI 回复一键分享到自建 ComelyMD 服务
 // @author       Loxonl
 // @match        https://chatgpt.com/*
