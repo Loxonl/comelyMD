@@ -1,6 +1,6 @@
 # 🎨 ComelyMD
 
-![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)
+![Version](https://img.shields.io/badge/version-v1.4.1-blue.svg)
 ![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
@@ -110,13 +110,24 @@ Content-Type: multipart/form-data
 
 ## 🏞️ 预览
 
-![1774335008482](image/README/1774335008482.png)
+![1](image/README/1.png)
 
-![1774335343296](image/README/1774335343296.png)
+![2](image/README/2.png)
 
-![1774335376789](image/README/1774335376789.png)
+![3](image/README/3.png)
 
-![1774335527747](image/README/1774335527747.png)
+## 🙏 致谢 (Acknowledgements)
+
+本项目在开发中引用/借鉴了以下优秀的开源项目，特此鸣谢（所有引用均依据其各自的开源协议合法使用）：
+
+- [Goldmark](https://github.com/yuin/goldmark) (MIT): 极速且高度可扩展的 Markdown 解析器，用作本项目的核心渲染引擎。
+- [Bluemonday](https://github.com/microcosm-cc/bluemonday) (BSD-3-Clause): 强大的 HTML 净化器，用于彻底防御 XSS 攻击。
+- [modernc.org/sqlite](https://modernc.org/sqlite) (Zlib): CGO-Free 的 SQLite 数据库引擎。
+- [Highlight.js](https://highlightjs.org/) (BSD-3-Clause): 极简优美的语法高亮显示工具。
+- [KaTeX](https://katex.org/) (MIT): 极速的数学公式网页端排版支持库。
+- [Mermaid](https://mermaid.js.org/) (MIT): 使用类 Markdown 文本生成图表的出众库。
+- [Turndown](https://github.com/mixmark-io/turndown) (MIT): 用于油猴脚本，将 HTML 页面结构高效地逆向转换为纯净 Markdown。
+- [Font Awesome](https://fontawesome.com/) (SIL OFL 1.1 / MIT): 项目界面中使用的精美矢量图标准。
 
 ## 📄 协议
 

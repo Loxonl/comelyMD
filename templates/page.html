@@ -162,6 +162,21 @@
     }
     .theme-toggle:hover { color: var(--text); border-color: var(--accent); transform: translateY(-2px); }
 
+    /* Citation Refer 样式 (模仿 ChatGPT 灰底小气泡) */
+    .markdown-body a.citation-link {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 5px; margin: 0 4px;
+      font-size: 0.7em; font-family: var(--font); font-weight: 700;
+      color: var(--text); background: var(--bg-input); 
+      border: 1px solid var(--border); border-radius: 99px;
+      vertical-align: super; text-decoration: none; text-underline-offset: auto;
+      transition: all 0.2s ease;
+    }
+    .markdown-body a.citation-link:hover {
+      background: var(--accent); color: #fff;
+      border-color: var(--accent); transform: translateY(-1px);
+    }
+
     #toast {
       visibility: hidden; position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%);
       background: var(--toast-bg); color: var(--toast-text);
@@ -275,7 +290,7 @@
     </div>
   </div>
 
-  <footer>v1.4.0</footer>
+  <footer>v1.4.1</footer>
   <div id="toast"></div>
 
   <script>
@@ -400,11 +415,56 @@
       }
     }
 
+    // === 美化引用标注 (Citation Refer) ===
+    function enhanceCitations() {
+      document.querySelectorAll('.markdown-body a').forEach(a => {
+        let txt = a.textContent.trim();
+        let isCitation = false;
+
+        // 规则1：天然属于纯数字系的标注（如 "1", "[1]", "【1】"）
+        if (/^\[\d+\]$/.test(txt) || /^【\d+】$/.test(txt) || /^\d+$/.test(txt)) {
+          isCitation = true;
+        }
+        // 规则2：像 "([Apple])" 或 "[AMD]" 这样，被括号作为句法特征紧紧包裹的短链接
+        else if (txt.length < 20) {
+          const prev = a.previousSibling;
+          const next = a.nextSibling;
+          // 确保它左右正好是纯文本节点
+          if (prev && prev.nodeType === 3 && next && next.nodeType === 3) {
+            const pText = prev.textContent;
+            const nText = next.textContent;
+            // 判定左边以括号结尾，右边以反括号开头（兼容其中带空格的情况）
+            if (/[\(\[【]\s*$/.test(pText) && /^\s*[\)\]】]/.test(nText)) {
+              const pairs = { '(': ')', '[': ']', '【': '】' };
+              const pChar = pText.match(/([\(\[【])\s*$/)[1];
+              const nChar = nText.match(/^\s*([\)\]】])/)[1];
+              
+              if (pairs[pChar] === nChar) {
+                isCitation = true;
+                // 此时外层有了引用壳，为了界面极简优雅，我们把壳（如多余的圆括号）抹除
+                prev.textContent = pText.replace(/[\(\[【]\s*$/, '');
+                next.textContent = nText.replace(/^\s*[\)\]】]/, '');
+              }
+            }
+          }
+        }
+
+        if (isCitation) {
+          a.classList.add('citation-link');
+          // 去掉自身的方括号/实心括号包衣，让角标气泡内部干净整洁
+          if ((txt.startsWith('[') && txt.endsWith(']')) || (txt.startsWith('【') && txt.endsWith('】'))) {
+            a.textContent = txt.slice(1, -1);
+          }
+        }
+      });
+    }
+
     // 页面初始化
     hljs.highlightAll();
     buildTOC();
     enhanceCodeBlocks();
     renderMathAndDiagrams();
+    enhanceCitations();
 
     document.getElementById('themeBtn').addEventListener('click', () => {
       const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ComelyMD Share — AI 对话分享
 // @namespace    https://github.com/Loxonl/comelyMD
-// @version      1.4.0
+// @version      1.4.8
 // @description  将 ChatGPT / Gemini 的 AI 回复一键分享到自建 ComelyMD 服务
 // @author       Loxonl
 // @match        https://chatgpt.com/*
@@ -13,6 +13,7 @@
 // @grant        GM_registerMenuCommand
 // @connect      *
 // @require      https://unpkg.com/turndown@7.1.3/dist/turndown.js
+// @require      https://unpkg.com/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -52,6 +53,9 @@
 
   // ─── Turndown 实例 ───
   const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+  if (typeof turndownPluginGfm !== 'undefined') {
+    td.use(turndownPluginGfm.gfm);
+  }
 
   // ─── 配置管理 ───
   function getConfig() {
@@ -79,9 +83,9 @@
         display: inline-flex; align-items: center; justify-content: center;
         width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
         background: transparent; border: none; color: inherit; padding: 0;
-        opacity: 0.5; transition: all 0.2s; position: relative;
+        transition: transform 0.2s; position: relative;
       }
-      .cmd-share-btn:hover { opacity: 1; }
+      .cmd-share-btn:hover { transform: scale(1.05); }
       .cmd-share-btn svg { width: 18px; height: 18px; }
       .cmd-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.5);
@@ -199,7 +203,18 @@
     line.setAttribute('x1', '12'); line.setAttribute('y1', '2');
     line.setAttribute('x2', '12'); line.setAttribute('y2', '15');
     svg.append(path, polyline, line);
-    btn.appendChild(svg);
+    
+    // 用户需求：添加 MD 角标以区分官方分享按钮，黑底白字高亮
+    const badge = document.createElement('span');
+    badge.textContent = 'MD';
+    Object.assign(badge.style, {
+      position: 'absolute', right: '-6px', bottom: '-4px', fontSize: '10px', 
+      fontWeight: '800', background: '#000', 
+      color: 'white', borderRadius: '4px', padding: '1px 3px', transform: 'scale(0.8)',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.3)', pointerEvents: 'none'
+    });
+    
+    btn.append(svg, badge);
     return btn;
   }
 
@@ -304,14 +319,20 @@
     bodyDiv.appendChild(h('div', {className:'cmd-result'}, ...resultItems));
 
     footerDiv.textContent = '';
-    const closeBtn = h('button', {className:'cmd-btn cmd-btn-cancel'}, '关闭');
-    const copyBtn = h('button', {className:'cmd-btn cmd-btn-primary'}, pwd ? '复制链接和密码' : '复制链接');
-    footerDiv.append(closeBtn, copyBtn);
+    const copyBtn = h('button', {className:'cmd-btn cmd-btn-cancel'}, pwd ? '仅复制 (含密码)' : '仅复制');
+    const viewBtn = h('button', {className:'cmd-btn cmd-btn-primary'}, '复制并查看');
+    footerDiv.append(copyBtn, viewBtn);
 
-    closeBtn.addEventListener('click', () => overlay.remove());
     copyBtn.addEventListener('click', () => {
       clipText(pwd ? `链接: ${url}\n密码: ${pwd}` : url);
       toast('✅ 已复制到剪贴板');
+      overlay.remove();
+    });
+    viewBtn.addEventListener('click', () => {
+      clipText(pwd ? `链接: ${url}\n密码: ${pwd}` : url);
+      toast('✅ 已复制并在新标签页打开');
+      window.open(url, '_blank');
+      overlay.remove();
     });
     clipText(url);
   }
@@ -380,8 +401,13 @@
         return null;
       },
       getContentHTML: (block) => {
-        const prose = block.querySelector('.prose, .markdown, .markdown-body');
-        return prose || block;
+        const contents = block.querySelectorAll('.prose, .markdown, .markdown-body');
+        if (contents.length > 0) {
+          const wrapper = document.createElement('div');
+          contents.forEach(c => wrapper.appendChild(c.cloneNode(true)));
+          return wrapper;
+        }
+        return block;
       },
     },
 
@@ -431,13 +457,28 @@
 
     const blocks = adapter.getMessageBlocks();
     blocks.forEach(block => {
-      if (block.getAttribute(PROCESSED_ATTR)) return;
-      const actionBar = adapter.getActionBar(block);
-      if (!actionBar) return;
+      const targetActionBar = adapter.getActionBar(block);
+      if (!targetActionBar) return;
+
+      const existingBtn = block.querySelector('.cmd-share-btn');
+      if (existingBtn) {
+        if (existingBtn.parentElement === targetActionBar) {
+          return; // 已经正确安放在当前时刻最新的有效底栏中
+        } else {
+          existingBtn.remove(); // 掉队在弃用隐藏的底栏里，销毁并准备重新注入
+        }
+      }
 
       block.setAttribute(PROCESSED_ATTR, '1');
 
       const btn = createShareIcon();
+      
+      // 用户需求：将 ChatGPT 的分享按钮排在最右下角
+      if (adapter.name === 'ChatGPT') {
+        targetActionBar.style.width = '100%';
+        btn.style.marginLeft = 'auto';
+      }
+
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -447,7 +488,7 @@
         showPanel(markdown);
       });
 
-      actionBar.appendChild(btn);
+      targetActionBar.appendChild(btn);
     });
   }
 
@@ -456,13 +497,33 @@
     if (!getActiveAdapter()) return;
     injectStyles();
     injectShareButtons();
+    
     let debounceTimer = null;
     const observer = new MutationObserver(() => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(injectShareButtons, 500);
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // 增加一个定时轮询，作为单页面应用（SPA）长内容流加载的一个强力兜底。
+    // 因为历史重加载时，MutationObserver 可能在异步返回之前捕捉不到结构化改变。
+    setInterval(injectShareButtons, 2000);
   }
+
+  // 监听 SPA 的路由变化，辅助触发
+  const _pushState = history.pushState;
+  history.pushState = function() {
+    _pushState.apply(history, arguments);
+    setTimeout(() => { if (typeof init !== 'undefined') injectShareButtons(); }, 1000);
+  };
+  const _replaceState = history.replaceState;
+  history.replaceState = function() {
+    _replaceState.apply(history, arguments);
+    setTimeout(() => { if (typeof init !== 'undefined') injectShareButtons(); }, 1000);
+  };
+  window.addEventListener('popstate', () => {
+    setTimeout(() => { if (typeof init !== 'undefined') injectShareButtons(); }, 1000);
+  });
 
   if (document.readyState === 'complete') {
     setTimeout(init, 1500);
